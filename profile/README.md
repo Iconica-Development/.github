@@ -2,7 +2,7 @@
 First off, thanks for taking the time to contribute! ❤️
 
 All types of contributions are encouraged and valued. 
-See the [Table of Contents](#table-of-contents) for different ways to help and details about how this project handles them. 
+See the [Table of Contents](#table-of-contents) for different ways to help and details about how we handle them. 
 Please make sure to read the relevant section before making your contribution. 
 It will make it a lot easier for us maintainers and smooth out the experience for all involved. 
 Iconica looks forward to your contributions. 🎉
@@ -16,16 +16,15 @@ Iconica looks forward to your contributions. 🎉
 
 ## Code of conduct
 
-> ### Legal notice 
-> When contributing to this project, you must agree that you have authored 100% of the content, that you have the necessary rights to the content and that the content you contribute may be provided under the project license. 
-> All accepted pull requests and other additions to this project will be considered intellectual property of Iconica.
+### Legal notice 
+When contributing to this project, you must agree that you have authored 100% of the content, that you have the necessary rights to the content and that the content you contribute may be provided under the project license. 
+All accepted pull requests and other additions to this project will be considered intellectual property of Iconica.
 
 All repositories should be kept clean of jokes, easter eggs and other unnecessary additions. 
 
 ## I have a question
 
-> If you want to ask a question, we assume that you have read the available documentation found within the code.
-
+If you want to ask a question, we assume that you have read the available documentation found within the code.
 Before you ask a question, it is best to search for existing issues that might help you. 
 In case you have found a suitable issue but still need clarification, you can ask your question 
 It is also advisable to search the internet for answers first.
@@ -70,7 +69,6 @@ Once it's filed:
 ### Contributing code
 
 When you start working on your contribution, make sure you are aware of the relevant documentation and the functionality of the component you are working on. 
-Unless you have a clear set of requirements and explicit go-ahead in the form of a card on the trello board, do not start working until you do.
 
 When writing code, follow the style guidelines set by Dart: [Effective Dart](https://Dart.dev/guides/language/effective-Dart). This contains most information you will need to write clean Dart code that is well documented.
 
