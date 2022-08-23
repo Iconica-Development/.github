@@ -20,20 +20,19 @@ Iconica looks forward to your contributions. 🎉
 > When contributing to this project, you must agree that you have authored 100% of the content, that you have the necessary rights to the content and that the content you contribute may be provided under the project license. 
 > All accepted pull requests and other additions to this project will be considered intellectual property of Iconica.
 
-The next shell is the professional basis for most Iconica projects and should be treated as such. 
-As a result, this project should be kept clean of jokes, easter eggs and other unnecessary additions. 
+All repositories should be kept clean of jokes, easter eggs and other unnecessary additions. 
 
 ## I have a question
 
 > If you want to ask a question, we assume that you have read the available documentation found within the code.
 
-Before you ask a question, it is best to search for existing [Issues](https://trello.com/b/Y9Hb5ZvK/Iconica-appshell) that might help you. 
-In case you have found a suitable issue and still need clarification, you can write your question in this issue. 
+Before you ask a question, it is best to search for existing issues that might help you. 
+In case you have found a suitable issue but still need clarification, you can ask your question 
 It is also advisable to search the internet for answers first.
 
 If you then still feel the need to ask a question and need clarification, we recommend the following:
 
-- Open an [Issue](https://trello.com/b/Y9Hb5ZvK/Iconica-appshell) in the `Ter Discussie` lane.
+- Open an issue.
 - Provide as much context as you can about what you're running into.
 
 We will then take care of the issue as soon as possible.
@@ -51,7 +50,7 @@ Please complete the following steps in advance to help us fix any potential bug 
 
 - Make sure that you are using the latest version.
 - Determine if your bug is really a bug and not an error on your side e.g. using incompatible environment components/versions (If you are looking for support, you might want to check [this section](#i-have-a-question)).
-- To see if other users have experienced (and potentially already solved) the same issue you are having, check if there is not already a bug report existing for your bug or error in the [bug tracker](https://trello.com/b/Y9Hb5ZvK/Iconica-appshell) within the lane `Bugs`.
+- To see if other users have experienced (and potentially already solved) the same issue you are having, check if there is not already a bug report existing for your bug or error.
 - Also make sure to search the internet (including Stack Overflow) to see if users outside of Iconica have discussed the issue.
 - Collect information about the bug:
 - Stack trace (Traceback)
