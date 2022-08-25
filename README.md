@@ -1,33 +1,19 @@
-[![pub package](https://img.shields.io/pub/v/[PACKAGE NAME ON PUB].svg)](https://github.com/Iconica-Development) [![Build status](URL TO REPO)](URL TO GITHUB ACTIONS) [![style: effective dart](https://img.shields.io/badge/style-effective_dart-40c4ff.svg)](https://github.com/tenhobi/effective_dart) 
 
-Short description of what your package is, why you created it. What issues it fixes and how it works. Also mention the available platforms
+## Iconica
 
-## Setup
+Welcome to our github repository!
 
-What setup steps are neccesarry and why>
-
-<details>
-<summary>PLATFORM</summary>
-    
-specific platform steps
-
-</details>
-
-## How to use
-
-How can we use the package descibe the most common ways with examples in 
-```dart
- codeblocks
-``` 
+Before contributing make sure you have read the [contribution guide](./profile/README.md)
+Also when adding a repository make sure to add a README in accordance with the README_TEMPLATE
 
 ## Issues
 
-Please file any issues, bugs or feature request as an issue on our [GitHub](REPO URL) page. Commercial support is available if you need help with integration with your app or services. You can contact us at [support@iconica.nl](mailto:support@iconica.nl).
+Please file any issues, bugs or feature request as an issue on our repository. Commercial support is available if you need help with integration with your app or services. You can contact us at [support@iconica.nl](mailto:support@iconica.nl).
 
 ## Want to contribute
 
-If you would like to contribute to the plugin (e.g. by improving the documentation, solving a bug or adding a cool new feature), please carefully review our [contribution guide](../CONTRIBUTING.md) and send us your [pull request](URL TO PULL REQUEST TAB IN REPO).
+If you would like to contribute to a package (e.g. by improving the documentation, solving a bug or adding a cool new feature), please carefully review our [contribution guide](./profile/README.md) and send us a pull request.
 
 ## Author
 
-This Permission handler plugin for Flutter is developed by [Iconiac](https://iconica.nl). You can contact us at <support@iconica.nl>
+This <PACKAGE NAME> for Flutter is developed by [Iconica](https://iconica.nl). You can contact us at <support@iconica.nl>
