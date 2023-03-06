@@ -31,22 +31,22 @@ All packages are developed by [Iconica](https://iconica.nl). You can contact us 
 | flutter_community_chat | 0.2.8 | [code](https://github.com/Iconica-Development/flutter_community_chat) | [example](https://github.com/Iconica-Development/flutter_community_chat/tree/master/example) |
 | flutter_date_time_picker | 3.0.0 | [code](https://github.com/Iconica-Development/flutter_date_time_picker) | [example](https://github.com/Iconica-Development/flutter_date_time_picker/tree/master/example) |
 | flutter_form_wizard | 5.0.8 | [code](https://github.com/Iconica-Development/flutter_form_wizard) | [example](https://github.com/Iconica-Development/flutter_form_wizard/tree/master/example) |
-| flutter_iconica_analysis | 2.0.0 | [code](https://github.com/Iconica-Development/flutter_iconica_analysis) | [example](https://github.com/Iconica-Development/flutter_iconica_analysis/tree/master/example) |
+| flutter_iconica_analysis | 3.0.0 | [code](https://github.com/Iconica-Development/flutter_iconica_analysis) | [example](https://github.com/Iconica-Development/flutter_iconica_analysis/tree/master/example) |
 | flutter_iconica_utilities | 0.0.5 | [code](https://github.com/Iconica-Development/flutter_iconica_utilities) | [example](https://github.com/Iconica-Development/flutter_iconica_utilities/tree/master/example) |
 | flutter_image_picker | 1.0.3 | [code](https://github.com/Iconica-Development/flutter_image_picker) | [example](https://github.com/Iconica-Development/flutter_image_picker/tree/master/example) |
 | flutter_input_library | 1.0.5 | [code](https://github.com/Iconica-Development/flutter_input_library) | [example](https://github.com/Iconica-Development/flutter_input_library/tree/master/example) |
 | flutter_introduction | Not Released | [code](https://github.com/Iconica-Development/flutter_introduction) | [example](https://github.com/Iconica-Development/flutter_introduction/tree/master/example) |
-| flutter_introduction_shared_preferences | Not Released | [code](https://github.com/Iconica-Development/flutter_introduction_shared_preferences) | [example](https://github.com/Iconica-Development/flutter_introduction_shared_preferences/tree/master/example) |
 | flutter_introduction_widget | 2.0.0 | [code](https://github.com/Iconica-Development/flutter_introduction_widget) | [example](https://github.com/Iconica-Development/flutter_introduction_widget/tree/master/example) |
+| flutter_login_service | 0.1.0 | [code](https://github.com/Iconica-Development/flutter_login_service) | [example](https://github.com/Iconica-Development/flutter_login_service/tree/master/example) |
 | flutter_login_widget | 3.1.2 | [code](https://github.com/Iconica-Development/flutter_login_widget) | [example](https://github.com/Iconica-Development/flutter_login_widget/tree/master/example) |
 | flutter_media_picker | 0.3.2 | [code](https://github.com/Iconica-Development/flutter_media_picker) | [example](https://github.com/Iconica-Development/flutter_media_picker/tree/master/example) |
 | flutter_menu | Not Released | [code](https://github.com/Iconica-Development/flutter_menu) | [example](https://github.com/Iconica-Development/flutter_menu/tree/master/example) |
 | flutter_multi_child_animated_switcher | 0.0.1 | [code](https://github.com/Iconica-Development/flutter_multi_child_animated_switcher) | [example](https://github.com/Iconica-Development/flutter_multi_child_animated_switcher/tree/master/example) |
-| flutter_profile | 1.0.4 | [code](https://github.com/Iconica-Development/flutter_profile) | [example](https://github.com/Iconica-Development/flutter_profile/tree/master/example) |
+| flutter_profile | 1.0.5 | [code](https://github.com/Iconica-Development/flutter_profile) | [example](https://github.com/Iconica-Development/flutter_profile/tree/master/example) |
 | flutter_rbac | 0.0.3 | [code](https://github.com/Iconica-Development/flutter_rbac) | [example](https://github.com/Iconica-Development/flutter_rbac/tree/master/example) |
 | flutter_registration | 0.3.0 | [code](https://github.com/Iconica-Development/flutter_registration) | [example](https://github.com/Iconica-Development/flutter_registration/tree/master/example) |
+| flutter_roadmap_component | Not Released | [code](https://github.com/Iconica-Development/flutter_roadmap_component) | [example](https://github.com/Iconica-Development/flutter_roadmap_component/tree/master/example) |
 | flutter_roster | 1.1.1 | [code](https://github.com/Iconica-Development/flutter_roster) | [example](https://github.com/Iconica-Development/flutter_roster/tree/master/example) |
-| flutter_splashscreen | Not Released | [code](https://github.com/Iconica-Development/flutter_splashscreen) | [example](https://github.com/Iconica-Development/flutter_splashscreen/tree/master/example) |
 | flutter_stepper | 2.1.0 | [code](https://github.com/Iconica-Development/flutter_stepper) | [example](https://github.com/Iconica-Development/flutter_stepper/tree/master/example) |
 | flutter_timetable | 1.0.0 | [code](https://github.com/Iconica-Development/flutter_timetable) | [example](https://github.com/Iconica-Development/flutter_timetable/tree/master/example) |
 | flutter_to_do_list | 0.0.9 | [code](https://github.com/Iconica-Development/flutter_to_do_list) | [example](https://github.com/Iconica-Development/flutter_to_do_list/tree/master/example) |
