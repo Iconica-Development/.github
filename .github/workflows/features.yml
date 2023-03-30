@@ -1,0 +1,32 @@
+name: Iconica Package GIFs updater
+
+on:
+  workflow_dispatch:
+
+jobs:
+    readmeupdate:
+        runs-on: ubuntu-latest
+
+        permissions:
+            contents: write
+        steps:
+            - uses: actions/checkout@v3
+            - name: Setup Dart
+              uses: dart-lang/setup-dart@v1
+            # run dart scraper/features.dart
+            - name: Install dependencies
+            # run it in the scraper folder
+              run: dart pub get --directory=scraper
+            - name: Update FEATURES.md
+              run: |
+                cd scraper
+                dart features.dart
+            - uses: stefanzweifel/git-auto-commit-action@v4
+              env:
+                    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                    commit_message: "feat: update FEATURES.md"
+                    branch: master
+                    commit_user_name: Github Actions Bot
+                    commit_user_email: actions@github.com
+                    commit_author: Author <actions@github.com>
