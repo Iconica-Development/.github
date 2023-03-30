@@ -57,8 +57,13 @@ void main() async {
 
   var file = File('../profile/README.md');
   var contents = file.readAsStringSync();
-  contents = contents.split('List of Flutter Packages').first;
-  output = contents + 'List of Flutter Packages\n\n' + output;
+  contents = contents
+      .split(
+          'A list of all the Gifs of the packages can be found [here](./profile/FEATURES.md)')
+      .first;
+  output = contents +
+      'A list of all the Gifs of the packages can be found [here](./profile/FEATURES.md)\n\n' +
+      output;
 
   File('../profile/README.md').writeAsStringSync(output);
 }
