@@ -40,7 +40,7 @@ A list of all the Gifs of the packages can be found [here](./profile/FEATURES.md
 | flutter_iconica_analysis | 5.0.0 | [code](https://github.com/Iconica-Development/flutter_iconica_analysis) | [example](https://github.com/Iconica-Development/flutter_iconica_analysis/tree/master/example) |
 | flutter_iconica_utilities | 0.0.5 | [code](https://github.com/Iconica-Development/flutter_iconica_utilities) | [example](https://github.com/Iconica-Development/flutter_iconica_utilities/tree/master/example) |
 | flutter_image_picker | 1.0.3 | [code](https://github.com/Iconica-Development/flutter_image_picker) | [example](https://github.com/Iconica-Development/flutter_image_picker/tree/master/example) |
-| flutter_image_progression | Not Released | [code](https://github.com/Iconica-Development/flutter_image_progression) | [example](https://github.com/Iconica-Development/flutter_image_progression/tree/master/example) |
+| flutter_image_progression | 0.0.1 | [code](https://github.com/Iconica-Development/flutter_image_progression) | [example](https://github.com/Iconica-Development/flutter_image_progression/tree/master/example) |
 | flutter_input_library | 2.0.0 | [code](https://github.com/Iconica-Development/flutter_input_library) | [example](https://github.com/Iconica-Development/flutter_input_library/tree/master/example) |
 | flutter_introduction | Not Released | [code](https://github.com/Iconica-Development/flutter_introduction) | [example](https://github.com/Iconica-Development/flutter_introduction/tree/master/example) |
 | flutter_introduction_interface | Not Released | [code](https://github.com/Iconica-Development/flutter_introduction_interface) | [example](https://github.com/Iconica-Development/flutter_introduction_interface/tree/master/example) |
@@ -54,7 +54,7 @@ A list of all the Gifs of the packages can be found [here](./profile/FEATURES.md
 | flutter_multi_child_animated_switcher | 0.0.1 | [code](https://github.com/Iconica-Development/flutter_multi_child_animated_switcher) | [example](https://github.com/Iconica-Development/flutter_multi_child_animated_switcher/tree/master/example) |
 | flutter_profile | 1.0.5 | [code](https://github.com/Iconica-Development/flutter_profile) | [example](https://github.com/Iconica-Development/flutter_profile/tree/master/example) |
 | flutter_rbac | 0.0.3 | [code](https://github.com/Iconica-Development/flutter_rbac) | [example](https://github.com/Iconica-Development/flutter_rbac/tree/master/example) |
-| flutter_registration | 0.4.0 | [code](https://github.com/Iconica-Development/flutter_registration) | [example](https://github.com/Iconica-Development/flutter_registration/tree/master/example) |
+| flutter_registration | 0.5.0 | [code](https://github.com/Iconica-Development/flutter_registration) | [example](https://github.com/Iconica-Development/flutter_registration/tree/master/example) |
 | flutter_roadmap_component | Not Released | [code](https://github.com/Iconica-Development/flutter_roadmap_component) | [example](https://github.com/Iconica-Development/flutter_roadmap_component/tree/master/example) |
 | flutter_roster | 1.1.1 | [code](https://github.com/Iconica-Development/flutter_roster) | [example](https://github.com/Iconica-Development/flutter_roster/tree/master/example) |
 | flutter_single_character_input | Not Released | [code](https://github.com/Iconica-Development/flutter_single_character_input) | [example](https://github.com/Iconica-Development/flutter_single_character_input/tree/master/example) |
