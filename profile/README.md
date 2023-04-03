@@ -39,7 +39,7 @@ A list of all the Gifs of the packages can be found [here](./profile/FEATURES.md
 | flutter_grid_to_list | 0.0.2 | [code](https://github.com/Iconica-Development/flutter_grid_to_list) | [example](https://github.com/Iconica-Development/flutter_grid_to_list/tree/master/example) |
 | flutter_iconica_analysis | 5.0.0 | [code](https://github.com/Iconica-Development/flutter_iconica_analysis) | [example](https://github.com/Iconica-Development/flutter_iconica_analysis/tree/master/example) |
 | flutter_iconica_utilities | 0.0.5 | [code](https://github.com/Iconica-Development/flutter_iconica_utilities) | [example](https://github.com/Iconica-Development/flutter_iconica_utilities/tree/master/example) |
-| flutter_image_picker | 1.0.3 | [code](https://github.com/Iconica-Development/flutter_image_picker) | [example](https://github.com/Iconica-Development/flutter_image_picker/tree/master/example) |
+| flutter_image_picker | 1.0.4 | [code](https://github.com/Iconica-Development/flutter_image_picker) | [example](https://github.com/Iconica-Development/flutter_image_picker/tree/master/example) |
 | flutter_image_progression | 0.0.1 | [code](https://github.com/Iconica-Development/flutter_image_progression) | [example](https://github.com/Iconica-Development/flutter_image_progression/tree/master/example) |
 | flutter_input_library | 2.0.0 | [code](https://github.com/Iconica-Development/flutter_input_library) | [example](https://github.com/Iconica-Development/flutter_input_library/tree/master/example) |
 | flutter_introduction | Not Released | [code](https://github.com/Iconica-Development/flutter_introduction) | [example](https://github.com/Iconica-Development/flutter_introduction/tree/master/example) |
