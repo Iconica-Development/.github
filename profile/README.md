@@ -30,7 +30,7 @@ A list of all the Gifs of the packages can be found [here](./profile/FEATURES.md
 | flutter_animated_widgets | 0.0.1 | [code](https://github.com/Iconica-Development/flutter_animated_widgets) | [example](https://github.com/Iconica-Development/flutter_animated_widgets/tree/master/example) |
 | flutter_bottom_alert_dialog | 0.0.1 | [code](https://github.com/Iconica-Development/flutter_bottom_alert_dialog) | [example](https://github.com/Iconica-Development/flutter_bottom_alert_dialog/tree/master/example) |
 | flutter_carousel | Not Released | [code](https://github.com/Iconica-Development/flutter_carousel) | [example](https://github.com/Iconica-Development/flutter_carousel/tree/master/example) |
-| flutter_chart | 0.0.2 | [code](https://github.com/Iconica-Development/flutter_chart) | [example](https://github.com/Iconica-Development/flutter_chart/tree/master/example) |
+| flutter_chart | 0.0.3 | [code](https://github.com/Iconica-Development/flutter_chart) | [example](https://github.com/Iconica-Development/flutter_chart/tree/master/example) |
 | flutter_community_chat | 0.2.8 | [code](https://github.com/Iconica-Development/flutter_community_chat) | [example](https://github.com/Iconica-Development/flutter_community_chat/tree/master/example) |
 | flutter_data_interface | Not Released | [code](https://github.com/Iconica-Development/flutter_data_interface) | [example](https://github.com/Iconica-Development/flutter_data_interface/tree/master/example) |
 | flutter_date_time_picker | 3.0.0 | [code](https://github.com/Iconica-Development/flutter_date_time_picker) | [example](https://github.com/Iconica-Development/flutter_date_time_picker/tree/master/example) |
@@ -48,7 +48,7 @@ A list of all the Gifs of the packages can be found [here](./profile/FEATURES.md
 | flutter_introduction_shared_preferences | Not Released | [code](https://github.com/Iconica-Development/flutter_introduction_shared_preferences) | [example](https://github.com/Iconica-Development/flutter_introduction_shared_preferences/tree/master/example) |
 | flutter_introduction_widget | 2.2.0 | [code](https://github.com/Iconica-Development/flutter_introduction_widget) | [example](https://github.com/Iconica-Development/flutter_introduction_widget/tree/master/example) |
 | flutter_login_service | 0.2.0 | [code](https://github.com/Iconica-Development/flutter_login_service) | [example](https://github.com/Iconica-Development/flutter_login_service/tree/master/example) |
-| flutter_login_widget | 4.0.0 | [code](https://github.com/Iconica-Development/flutter_login_widget) | [example](https://github.com/Iconica-Development/flutter_login_widget/tree/master/example) |
+| flutter_login_widget | 4.1.0 | [code](https://github.com/Iconica-Development/flutter_login_widget) | [example](https://github.com/Iconica-Development/flutter_login_widget/tree/master/example) |
 | flutter_media_picker | 0.5.0 | [code](https://github.com/Iconica-Development/flutter_media_picker) | [example](https://github.com/Iconica-Development/flutter_media_picker/tree/master/example) |
 | flutter_menu | Not Released | [code](https://github.com/Iconica-Development/flutter_menu) | [example](https://github.com/Iconica-Development/flutter_menu/tree/master/example) |
 | flutter_multi_child_animated_switcher | 0.0.1 | [code](https://github.com/Iconica-Development/flutter_multi_child_animated_switcher) | [example](https://github.com/Iconica-Development/flutter_multi_child_animated_switcher/tree/master/example) |
