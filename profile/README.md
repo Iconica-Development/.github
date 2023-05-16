@@ -20,6 +20,8 @@ All packages are developed by [Iconica](https://iconica.nl). You can contact us 
 
 ## List of Flutter Packages
 
+Click [here](https://github.com/Iconica-Development/.github/actions/workflows/release.yml) to run the github action updating this list.
+
 A list of all the Gifs of the packages can be found [here](./profile/FEATURES.md)
 
 | Package | Latest Tag | Link | Example |

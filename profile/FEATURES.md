@@ -1,6 +1,7 @@
 # Previews for all the packages
 Each package has a preview gif that shows the package in action. The preview gif is located in the root of the package and is named the same as the package.
 Only the packages that have a preview gif are listed below.
+Click [here](https://github.com/Iconica-Development/.github/actions/workflows/features.yml) to run the github action updating this list. 
 
 ## List of Flutter Packages
 
