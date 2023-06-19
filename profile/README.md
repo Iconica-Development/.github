@@ -39,7 +39,7 @@ A list of all the Gifs of the packages can be found [here](./profile/FEATURES.md
 | flutter_dialogs | Not Released | [code](https://github.com/Iconica-Development/flutter_dialogs) | [example](https://github.com/Iconica-Development/flutter_dialogs/tree/master/example) |
 | flutter_form_wizard | 6.1.1 | [code](https://github.com/Iconica-Development/flutter_form_wizard) | [example](https://github.com/Iconica-Development/flutter_form_wizard/tree/master/example) |
 | flutter_grid_to_list | 0.0.2 | [code](https://github.com/Iconica-Development/flutter_grid_to_list) | [example](https://github.com/Iconica-Development/flutter_grid_to_list/tree/master/example) |
-| flutter_iconica_analysis | 5.0.0 | [code](https://github.com/Iconica-Development/flutter_iconica_analysis) | [example](https://github.com/Iconica-Development/flutter_iconica_analysis/tree/master/example) |
+| flutter_iconica_analysis | 6.0.0 | [code](https://github.com/Iconica-Development/flutter_iconica_analysis) | [example](https://github.com/Iconica-Development/flutter_iconica_analysis/tree/master/example) |
 | flutter_iconica_utilities | 0.0.5 | [code](https://github.com/Iconica-Development/flutter_iconica_utilities) | [example](https://github.com/Iconica-Development/flutter_iconica_utilities/tree/master/example) |
 | flutter_image_picker | 1.0.4 | [code](https://github.com/Iconica-Development/flutter_image_picker) | [example](https://github.com/Iconica-Development/flutter_image_picker/tree/master/example) |
 | flutter_image_progression | 0.0.1 | [code](https://github.com/Iconica-Development/flutter_image_progression) | [example](https://github.com/Iconica-Development/flutter_image_progression/tree/master/example) |
@@ -50,7 +50,7 @@ A list of all the Gifs of the packages can be found [here](./profile/FEATURES.md
 | flutter_introduction_shared_preferences | 1.0.0 | [code](https://github.com/Iconica-Development/flutter_introduction_shared_preferences) | [example](https://github.com/Iconica-Development/flutter_introduction_shared_preferences/tree/master/example) |
 | flutter_introduction_widget | 3.0.0 | [code](https://github.com/Iconica-Development/flutter_introduction_widget) | [example](https://github.com/Iconica-Development/flutter_introduction_widget/tree/master/example) |
 | flutter_login_service | 1.0.0 | [code](https://github.com/Iconica-Development/flutter_login_service) | [example](https://github.com/Iconica-Development/flutter_login_service/tree/master/example) |
-| flutter_login_widget | 4.1.0 | [code](https://github.com/Iconica-Development/flutter_login_widget) | [example](https://github.com/Iconica-Development/flutter_login_widget/tree/master/example) |
+| flutter_login_widget | 4.1.1 | [code](https://github.com/Iconica-Development/flutter_login_widget) | [example](https://github.com/Iconica-Development/flutter_login_widget/tree/master/example) |
 | flutter_media_picker | 0.6.1 | [code](https://github.com/Iconica-Development/flutter_media_picker) | [example](https://github.com/Iconica-Development/flutter_media_picker/tree/master/example) |
 | flutter_menu | Not Released | [code](https://github.com/Iconica-Development/flutter_menu) | [example](https://github.com/Iconica-Development/flutter_menu/tree/master/example) |
 | flutter_multi_child_animated_switcher | 0.0.1 | [code](https://github.com/Iconica-Development/flutter_multi_child_animated_switcher) | [example](https://github.com/Iconica-Development/flutter_multi_child_animated_switcher/tree/master/example) |
