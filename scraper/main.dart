@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:intl/intl.dart';
 import 'package:web_scraper/web_scraper.dart';
 
 void main() async {
@@ -7,8 +8,8 @@ void main() async {
   var output = '';
 
   // add the header
-  output += '| Package | Latest Tag | Link | Example |\n';
-  output += '| ------- | ---------- | ---- | ------- |\n';
+  output += '| Package | Latest Tag | Last Updated | Link | Example |\n';
+  output += '| ------- | ---------- | ------------ | ---- | ------- |\n';
   var pageIndex = 1;
   var lastPageReached = false;
   List elements = [];
@@ -44,12 +45,20 @@ void main() async {
       await Future.delayed(Duration(milliseconds: 200));
       if (await webScraper.loadWebPage('/Iconica-Development/$name/releases')) {
         var elements = webScraper.getElement('a.Link--primary', ['href']);
+
+        var releaseTimes =
+            webScraper.getElement('relative-time.no-wrap', ['datetime']);
+
         var link = 'https://github.com/Iconica-Development/$name';
         var highestTag = (elements.isNotEmpty)
             ? elements.first['title'].toString()
             : 'Not Released';
+        var releaseTime = releaseTimes.isNotEmpty
+            ? DateFormat("yyyy-MM-dd")
+                .format(DateTime.parse(releaseTimes.first['attributes']['datetime'])) 
+            : '';
         output +=
-            '| $name | $highestTag | [code]($link) | [example]($link/tree/master/example) |\n';
+            '| $name | $highestTag | $releaseTime | [code]($link) | [example]($link/tree/master/example) |\n';
       }
     }
   }
