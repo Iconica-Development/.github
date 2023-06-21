@@ -91,8 +91,7 @@ void main() async {
           // combine all the links into one string
           var chosenGif =
               gifs.isNotEmpty ? '![Example GIF of package](${gifs.first})' : '';
-          var chosenMp4 =
-              mp4s.isNotEmpty ? '![Example MP4 of package](${mp4s.first})' : '';
+          var chosenMp4 = mp4s.isNotEmpty ? mp4s.first : '';
           output +=
               '| $name | $description | [code]($pageLink) | $chosenGif $chosenMp4 |\n ';
         }
