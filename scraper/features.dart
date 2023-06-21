@@ -93,7 +93,7 @@ void main() async {
               gifs.isNotEmpty ? '![Example GIF of package](${gifs.first})' : '';
           var chosenMp4 = mp4s.isNotEmpty ? mp4s.first : '';
           output +=
-              '| $name | $description | [code]($pageLink) | $chosenGif $chosenMp4 |\n ';
+              '| $name | $description | [code]($pageLink) |$chosenMp4 $chosenGif |\n ';
         }
       }
     }
