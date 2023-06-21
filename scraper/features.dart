@@ -3,19 +3,20 @@ import 'dart:io';
 import 'package:web_scraper/web_scraper.dart';
 
 void main() async {
-  final webScraper = WebScraper('https://github.com');
+  var webScraper = WebScraper('https://github.com');
   var output = '';
 
   // add the header
-  output += '| Package | Link | Preview |\n';
-  output += '| ------- | ---- | ------- |\n';
+  output += '| Package | Description | Link | Preview |\n';
+  output += '| ------- | ----------- | ---- | ------- |\n';
   var pageIndex = 1;
   var lastPageReached = false;
   List elements = [];
   // first retrieve all elements
   while (!lastPageReached) {
     if (await webScraper.loadWebPage(
-        '/orgs/Iconica-Development/repositories?page=$pageIndex')) {
+      '/orgs/Iconica-Development/repositories?page=$pageIndex',
+    )) {
       // add all web elements to the list
       elements += webScraper.getElement('a.d-inline-block', ['href']);
       // check if this is the last page
@@ -40,19 +41,60 @@ void main() async {
         .last;
     if (name.startsWith('flutter_')) {
       await Future.delayed(Duration(milliseconds: 200));
+      var pageLink = 'https://github.com/Iconica-Development/$name';
+
       // check the master branch to search for .gif files
       if (await webScraper.loadWebPage('/Iconica-Development/$name')) {
-        var elements = webScraper.getElement('a.Link--primary', ['href']);
-        var gifName = '';
-        for (var element in elements) {
-          var link = 'https://github.com/Iconica-Development/$name';
-          var href = element['attributes']['href'].toString();
+        var gifs = <String>[];
+        var mp4s = <String>[];
+        var descriptionElement = webScraper.getElement('p.f4%20my-3', []);
+
+        // strip leading and ending whitespace from the string
+        var description = (descriptionElement.isNotEmpty)
+            ? descriptionElement.first['title'].toString().trim()
+            : 'No description';
+        var fileLinks = webScraper.getElement('a.Link--primary', ['href']);
+        for (var fileLink in fileLinks) {
+          var href = fileLink['attributes']['href'].toString();
           if (href.endsWith('.gif')) {
-            gifName = href;
-            output +=
-                '| $name | [code]($link) | ![Example GIF of package](https://github.com$gifName) |\n';
-            break;
+            gifs.add('https://github.com$href');
+          } else if (href.endsWith('.mp4')) {
+            mp4s.add('https://github.com$href');
           }
+        }
+
+        await Future.delayed(Duration(milliseconds: 100));
+        // look in the readme.md file for a gif or mp4 reference
+        if (await webScraper
+            .loadWebPage('/Iconica-Development/$name/blob/master/README.md')) {
+          var images = webScraper.getElement('img', ['src']);
+          for (var element in images) {
+            var src = element['attributes']['src'].toString();
+            if (src.endsWith('.gif')) {
+              gifs.add((src.startsWith('https://'))
+                  ? src
+                  : 'https://github.com$src');
+            }
+          }
+
+          var videos = webScraper.getElement('video', ['src']);
+          for (var element in videos) {
+            var src = element['attributes']['src'].toString();
+            if (src.endsWith('.mp4')) {
+              mp4s.add((src.startsWith('https://'))
+                  ? src
+                  : 'https://github.com$src');
+            }
+          }
+        }
+        if (gifs.isNotEmpty || mp4s.isNotEmpty) {
+          // combine all the links into one string
+          var chosenGif =
+              gifs.isNotEmpty ? '![Example GIF of package](${gifs.first})' : '';
+          var chosenMp4 =
+              mp4s.isNotEmpty ? '![Example MP4 of package](${mp4s.first})' : '';
+          output +=
+              '| $name | $description | [code]($pageLink) | $chosenGif $chosenMp4 |\n ';
         }
       }
     }
