@@ -7,8 +7,8 @@ void main() async {
   var output = '';
 
   // add the header
-  output += '| Package | Description | Link | Preview |\n';
-  output += '| ------- | ----------- | ---- | ------- |\n';
+  output += '| Package | Description | Link | Image | Gif | Video |\n';
+  output += '| ------- | ----------- | ---- | ----- | --- | ----- |\n';
   var pageIndex = 1;
   var lastPageReached = false;
   List elements = [];
@@ -40,11 +40,13 @@ void main() async {
         .split('/Iconica-Development/')
         .last;
     if (name.startsWith('flutter_')) {
+      // TODO(freek): also check for repositories with topic 'component'
       await Future.delayed(Duration(milliseconds: 200));
       var pageLink = 'https://github.com/Iconica-Development/$name';
 
       // check the master branch to search for .gif files
       if (await webScraper.loadWebPage('/Iconica-Development/$name')) {
+        var images = <String>[];
         var gifs = <String>[];
         var mp4s = <String>[];
         var descriptionElement = webScraper.getElement('p.f4%20my-3', []);
@@ -56,24 +58,42 @@ void main() async {
         var fileLinks = webScraper.getElement('a.Link--primary', ['href']);
         for (var fileLink in fileLinks) {
           var href = fileLink['attributes']['href'].toString();
-          if (href.endsWith('.gif')) {
-            gifs.add('https://github.com$href');
-          } else if (href.endsWith('.mp4')) {
-            mp4s.add('https://github.com$href');
-          }
+
+          (switch (href) {
+            (String a) when a.endsWith('.gif') => gifs,
+            (String a) when a.endsWith('.mp4') => mp4s,
+            // check for jpg, jpeg, png, svg
+            (String a) when a.endsWith('.jpg') => images,
+            (String a) when a.endsWith('.jpeg') => images,
+            (String a) when a.endsWith('.png') => images,
+            (String a) when a.endsWith('.svg') => images,
+            _ => [],
+          })
+              .add('https://github.com$href');
         }
 
         await Future.delayed(Duration(milliseconds: 100));
         // look in the readme.md file for a gif or mp4 reference
         if (await webScraper
             .loadWebPage('/Iconica-Development/$name/blob/master/README.md')) {
-          var images = webScraper.getElement('img', ['src']);
-          for (var element in images) {
+          var imageElements = webScraper.getElement('img', ['src']);
+          for (var element in imageElements) {
             var src = element['attributes']['src'].toString();
-            if (src.endsWith('.gif')) {
-              gifs.add((src.startsWith('https://'))
-                  ? src
-                  : 'https://github.com$src');
+            // check if src contains twitter
+            // TODO(freek): filter out the images that are not in the readme.md file
+            if (!src.contains('githubassets') || src.contains('Iconica')) {
+              (switch (src) {
+                (String a) when a.endsWith('.gif') => gifs,
+                // check for jpg, jpeg, png, svg
+                (String a) when a.endsWith('.jpg') => images,
+                (String a) when a.endsWith('.jpeg') => images,
+                (String a) when a.endsWith('.png') => images,
+                (String a) when a.endsWith('.svg') => images,
+                _ => <String>[],
+              })
+                  .add(src.startsWith('https://')
+                      ? src
+                      : 'https://github.com$src');
             }
           }
 
@@ -87,13 +107,17 @@ void main() async {
             }
           }
         }
-        if (gifs.isNotEmpty || mp4s.isNotEmpty) {
+        if (gifs.isNotEmpty || mp4s.isNotEmpty || images.isNotEmpty) {
           // combine all the links into one string
-          var chosenGif =
-              gifs.isNotEmpty ? '![Example GIF of package](${gifs.first})' : '';
-          var chosenMp4 = mp4s.isNotEmpty ? mp4s.first : '';
+          var chosenGif = gifs.isNotEmpty
+              ? '![Example GIF of package](${gifs.first})'
+              : ' no gif ';
+          var chosenMp4 = mp4s.isNotEmpty ? mp4s.first : ' no video ';
+          var chosenImage = images.isNotEmpty
+              ? '![Example Image of package](${images.first})'
+              : ' no image';
           output +=
-              '| $name | $description | [code]($pageLink) |$chosenMp4 $chosenGif |\n ';
+              '| $name | $description | [code]($pageLink) | $chosenImage | $chosenGif | $chosenMp4 |\n ';
         }
       }
     }

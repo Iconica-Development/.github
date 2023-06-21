@@ -54,8 +54,8 @@ void main() async {
             ? elements.first['title'].toString()
             : 'Not Released';
         var releaseTime = releaseTimes.isNotEmpty
-            ? DateFormat("yyyy-MM-dd")
-                .format(DateTime.parse(releaseTimes.first['attributes']['datetime'])) 
+            ? DateFormat("yyyy-MM-dd").format(
+                DateTime.parse(releaseTimes.first['attributes']['datetime']))
             : '';
         output +=
             '| $name | $highestTag | $releaseTime | [code]($link) | [example]($link/tree/master/example) |\n';
