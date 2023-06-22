@@ -7,8 +7,8 @@ void main() async {
   var output = '';
 
   // add the header
-  output += '| Package | Description | Link | Image | Gif |\n';
-  output += '| ------- | ----------- | ---- | ----- | --- |\n';
+  output += '| Package | Description | Link | Gif | Image |\n';
+  output += '| ------- | ----------- | ---- | --- | ----- |\n';
   var pageIndex = 1;
   var lastPageReached = false;
   List elements = [];
@@ -104,7 +104,7 @@ void main() async {
               ? '![Example Image of package](${images.first})'
               : ' no image';
           output +=
-              '| $name | $description | [code]($pageLink) | $chosenImage | $chosenGif |\n ';
+              '| $name | $description | [code]($pageLink) | $chosenGif | $chosenImage |\n ';
         }
       }
     }
