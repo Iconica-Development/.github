@@ -7,8 +7,8 @@ void main() async {
   var output = '';
 
   // add the header
-  output += '| Package | Description | Link | Image | Gif | Video |\n';
-  output += '| ------- | ----------- | ---- | ----- | --- | ----- |\n';
+  output += '| Package | Description | Link | Image | Gif |\n';
+  output += '| ------- | ----------- | ---- | ----- | --- |\n';
   var pageIndex = 1;
   var lastPageReached = false;
   List elements = [];
@@ -48,7 +48,6 @@ void main() async {
       if (await webScraper.loadWebPage('/Iconica-Development/$name')) {
         var images = <String>[];
         var gifs = <String>[];
-        var mp4s = <String>[];
         var descriptionElement = webScraper.getElement('p.f4%20my-3', []);
 
         // strip leading and ending whitespace from the string
@@ -61,7 +60,6 @@ void main() async {
 
           (switch (href) {
             (String a) when a.endsWith('.gif') => gifs,
-            (String a) when a.endsWith('.mp4') => mp4s,
             // check for jpg, jpeg, png, svg
             (String a) when a.endsWith('.jpg') => images,
             (String a) when a.endsWith('.jpeg') => images,
@@ -96,28 +94,17 @@ void main() async {
                       : 'https://github.com$src');
             }
           }
-
-          var videos = webScraper.getElement('video', ['src']);
-          for (var element in videos) {
-            var src = element['attributes']['src'].toString();
-            if (src.endsWith('.mp4')) {
-              mp4s.add((src.startsWith('https://'))
-                  ? src
-                  : 'https://github.com$src');
-            }
-          }
         }
-        if (gifs.isNotEmpty || mp4s.isNotEmpty || images.isNotEmpty) {
+        if (gifs.isNotEmpty || images.isNotEmpty) {
           // combine all the links into one string
           var chosenGif = gifs.isNotEmpty
               ? '![Example GIF of package](${gifs.first})'
               : ' no gif ';
-          var chosenMp4 = mp4s.isNotEmpty ? mp4s.first : ' no video ';
           var chosenImage = images.isNotEmpty
               ? '![Example Image of package](${images.first})'
               : ' no image';
           output +=
-              '| $name | $description | [code]($pageLink) | $chosenImage | $chosenGif | $chosenMp4 |\n ';
+              '| $name | $description | [code]($pageLink) | $chosenImage | $chosenGif |\n ';
         }
       }
     }
