@@ -1,5 +1,7 @@
 name: Iconica Standard Component CI Action
 
+# Workflow version: 1.0.0
+
 # https://docs.github.com/en/actions/using-workflows/reusing-workflows
 on:
     workflow_call:

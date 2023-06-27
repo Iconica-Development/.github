@@ -1,0 +1,44 @@
+name: Iconica Standard App CI Action
+
+# Workflow version: 1.0.0
+
+# https://docs.github.com/en/actions/using-workflows/reusing-workflows
+on:
+    workflow_call:
+
+jobs:
+    lint:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+            - uses: actions/cache@v3
+              with:
+                    path: |
+                        ~/.gradle/wrapper
+                        /opt/hostedtoolcache/flutter
+                    key: ${{ runner.OS }}-flutter-install-cache
+            - uses: subosito/flutter-action@v2
+              with:
+                channel: 'stable'
+            - name: Project preparation
+              run: flutter pub get
+            - name: Environment Config Generation
+              run: |
+                if [[ -n "${{ secrets.env_config }}" ]]; then
+                    echo "${{ secrets.env_config }}" > .env
+                    echo "${{ secrets.env_config }}" > dotenv
+                else
+                    touch .env
+                    touch dotenv
+                fi
+              shell: bash
+              env: 
+                ENV_CONFIG: ${{ secrets.ENV_CONFIG }}
+            - name: Dart format
+              run: dart format -o none --set-exit-if-changed .
+            - name: Flutter analyze
+              run: flutter analyze
+            - name: Flutter test
+              run: flutter test --coverage --reporter github --no-test-assets --exclude-tags integration
+
+        
