@@ -1,11 +1,10 @@
 {
     "name": "Iconica Standard App CI Workflow",
-    "description": "This is a the basic Iconica Workflow that calls a central Workflow for checking Apps before merging",
+    "description": "This is a basic Iconica Workflow that calls a central Workflow for checking Apps before merging",
     "iconName": "octicon check-circle",
     "categories": [
         "continuous-integration",
         "testing",
-        "code-quality",
-        "Dart"
+        "code-quality"
     ]
 }

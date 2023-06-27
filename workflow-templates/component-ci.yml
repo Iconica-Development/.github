@@ -1,4 +1,4 @@
-name: Iconica Standard App CI Workflow
+name: Iconica Standard Component CI Workflow
 # Workflow Caller version: 1.0.0
 
 on:
@@ -7,6 +7,6 @@ on:
 
 jobs:
   call-global-iconica-workflow:
-    uses: Iconica-Development/.github/.github/workflows/app-ci.yml@master
+    uses: Iconica-Development/.github/.github/workflows/component-ci.yml@master
     secrets: inherit
     permissions: write-all

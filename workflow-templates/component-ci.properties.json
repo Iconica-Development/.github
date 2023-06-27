@@ -1,0 +1,10 @@
+{
+    "name": "Iconica Standard Component CI Workflow",
+    "description": "This is a basic Iconica Workflow that calls a central Workflow for checking Components before merging",
+    "iconName": "octicon check-circle",
+    "categories": [
+        "continuous-integration",
+        "testing",
+        "code-quality"
+    ]
+}
