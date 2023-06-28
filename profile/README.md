@@ -18,9 +18,20 @@ If you would like to contribute to a package (e.g. by improving the documentatio
 
 All packages are developed by [Iconica](https://iconica.nl). You can contact us at <support@iconica.nl>
 
+## List of Iconica Starter Workflows
+There are multiple standardized Workflows used by the Iconica Projects. Adding this workflow to a repositories .github/workflows/ folder will add a Github Action for tasks like linting and testing code.
+Each Starter Workflow calls a workflow inside this repository so Workflows can be easily improved.
+
+| Name | Version | Link | Usage |
+| ---- | ------- | ---- | ----- |
+| app-ci | 1.0.0 | [app-ci.yml](./workflow-templates/app-ci.yml) | This Workflow runs the standard steps for Iconica Apps before approval can be given on a Pull Request |
+| component-ci | 1.0.0 | [component-ci.yml](./workflow-templates/component-ci.yml) | This Workflow runs the standard steps for Iconica Components before approval can be given on a Pull Request |
+
 ## List of Flutter Packages
 
-Click [here](https://github.com/Iconica-Development/.github/actions/workflows/release.yml) to run the github action updating this list.
+This list contains all the repositories that contain components. When a package is marked as having Melos it means there are multiple components inside the repository. To find out the name of the component you will have to look inside the repository.
+
+Click [here](https://github.com/Iconica-Development/.github/actions/workflows/release.yml) to run the Github Action updating this list.
 
 A list of all the Gifs of the packages can be found [here](./profile/FEATURES.md)
 
