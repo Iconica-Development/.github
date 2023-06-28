@@ -8,8 +8,10 @@ void main() async {
   var output = '';
 
   // add the header
-  output += '| Package | Latest Tag | Last Updated | Link | Example |\n';
-  output += '| ------- | ---------- | ------------ | ---- | ------- |\n';
+  output +=
+      '| Package | Latest Tag | Last Updated | Melos | Link | Example |\n';
+  output +=
+      '| ------- | ---------- | ------------ | ----- | ---- | ------- |\n';
   var pageIndex = 1;
   var lastPageReached = false;
   List elements = [];
@@ -42,7 +44,18 @@ void main() async {
         .split('/Iconica-Development/')
         .last;
     if (name.startsWith('flutter_')) {
-      await Future.delayed(Duration(milliseconds: 200));
+      var melos = false;
+      await Future.delayed(Duration(milliseconds: 100));
+      if (await webScraper.loadWebPage('/Iconica-Development/$name')) {
+        var elements = webScraper.getElement('a.Link--primary', ['href']);
+        for (var element in elements) {
+          if (element['title'].toString().contains('melos')) {
+            melos = true;
+            break;
+          }
+        }
+      }
+      await Future.delayed(Duration(milliseconds: 100));
       if (await webScraper.loadWebPage('/Iconica-Development/$name/releases')) {
         var elements = webScraper.getElement('a.Link--primary', ['href']);
 
@@ -58,7 +71,7 @@ void main() async {
                 DateTime.parse(releaseTimes.first['attributes']['datetime']))
             : '';
         output +=
-            '| $name | $highestTag | $releaseTime | [code]($link) | [example]($link/tree/master/example) |\n';
+            '| $name | $highestTag | $releaseTime | ${melos ? 'Yes' : 'No'} | [code]($link) | [example]($link/tree/master/example) |\n';
       }
     }
   }
