@@ -1,0 +1,10 @@
+{
+    "name": "Iconica Flutter Caching Workflow",
+    "description": "This is a basic Iconica Workflow that calls a central Workflow for creating a fresh Flutter cache",
+    "iconName": "octicon cache",
+    "categories": [
+        "continuous-integration",
+        "dependency-management",
+        "utilities"
+    ]
+}
