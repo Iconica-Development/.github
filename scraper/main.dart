@@ -9,9 +9,9 @@ void main() async {
 
   // add the header
   output +=
-      '| Package | Latest Tag | Last Updated | Melos | Link | Example |\n';
+      '| Package | Latest Tag | Last Updated | Melos | Link | Example | Features |\n';
   output +=
-      '| ------- | ---------- | ------------ | ----- | ---- | ------- |\n';
+      '| ------- | ---------- | ------------ | ----- | ---- | ------- | -------- |\n';
   var pageIndex = 1;
   var lastPageReached = false;
   List elements = [];
@@ -45,14 +45,19 @@ void main() async {
         .last;
     if (name.startsWith('flutter_')) {
       var melos = false;
+      var features = false;
       await Future.delayed(Duration(milliseconds: 100));
       if (await webScraper.loadWebPage('/Iconica-Development/$name')) {
         var elements = webScraper.getElement('a.Link--primary', ['href']);
         for (var element in elements) {
           if (element['title'].toString().contains('melos')) {
             melos = true;
-            break;
           }
+          // check to see if there is a FEATURES.md file if so link to it
+          if (element['title'].toString().contains('FEATURES.md')) {
+            features = true;
+          }
+          if (melos && features) break;
         }
       }
       await Future.delayed(Duration(milliseconds: 100));
@@ -71,7 +76,7 @@ void main() async {
                 DateTime.parse(releaseTimes.first['attributes']['datetime']))
             : '';
         output +=
-            '| $name | $highestTag | $releaseTime | ${melos ? 'Yes' : 'No'} | [code]($link) | [example]($link/tree/master/example) |\n';
+            '| $name | $highestTag | $releaseTime | ${melos ? 'Yes' : 'No'} | [code]($link) | [example]($link/tree/master/example) | ${features ? '[features]($link/tree/master/FEATURES.md)' : ''} |\n';
       }
     }
   }

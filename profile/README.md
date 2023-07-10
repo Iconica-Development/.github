@@ -26,6 +26,7 @@ Each Starter Workflow calls a workflow inside this repository so Workflows can b
 | ---- | ------- | ---- | ----- |
 | app-ci | 1.0.0 | [app-ci.yml](./workflow-templates/app-ci.yml) | This Workflow runs the standard steps for Iconica Apps before approval can be given on a Pull Request |
 | component-ci | 1.0.0 | [component-ci.yml](./workflow-templates/component-ci.yml) | This Workflow runs the standard steps for Iconica Components before approval can be given on a Pull Request |
+| flutter-cache | 1.0.0 | [flutter-cache.yml](./workflow-templates/flutter-cache.yml) | This Workflow runs a caching action on master and development branch to ensure better cache reuse |
 
 ## List of Flutter Packages
 
