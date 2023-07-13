@@ -21,6 +21,7 @@ jobs:
             - uses: subosito/flutter-action@v2
               with:
                 channel: 'stable'
+                cache: true
             - name: Project preparation
               run: flutter pub get
             - name: Environment Config Generation
