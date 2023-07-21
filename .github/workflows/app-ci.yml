@@ -1,6 +1,6 @@
 name: Iconica Standard App CI Action
 
-# Workflow version: 1.0.0
+# Workflow version: 2.0.0
 
 # https://docs.github.com/en/actions/using-workflows/reusing-workflows
 on:
@@ -12,16 +12,11 @@ jobs:
         timeout-minutes: 10
         steps:
             - uses: actions/checkout@v3
-            - uses: actions/cache@v3
-              with:
-                    path: |
-                        ~/.gradle/wrapper
-                        /opt/hostedtoolcache/flutter
-                    key: ${{ runner.OS }}-flutter-install-cache
             - uses: subosito/flutter-action@v2
               with:
                 channel: 'stable'
                 cache: true
+                cache-key: ${{ runner.OS }}-flutter-install-cache
             - name: Project preparation
               run: flutter pub get
             - name: Environment Config Generation
