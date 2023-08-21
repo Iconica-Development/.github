@@ -1,0 +1,6 @@
+{
+    "name": "Iconica Flutter Firebase Web Distribution Workflow",
+    "description": "This Github Action can automatically deploy your Flutter Web app to Firebase Hosting. The following secrets need to be configured: GCP_SA_KEY and DOTENV_BASE64. In the Github Environment Variables the PROJECT_ID needs to be set.For the configuration you can follow this guide: https://firebase.google.com/docs/hosting/github-integration",
+    "categories": [
+    ]
+}

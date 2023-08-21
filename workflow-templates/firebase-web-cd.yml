@@ -1,0 +1,14 @@
+name: Iconica Flutter Firebase Web Distribution Workflow
+# Workflow Caller version: 1.0.0
+
+on:
+  push:
+    branches:
+      [master]
+  workflow_dispatch:
+
+jobs:
+  call-global-iconica-workflow:
+    uses: Iconica-Development/.github/.github/workflows/firebase-web-cd.yml@master
+    secrets: inherit
+    permissions: write-all
