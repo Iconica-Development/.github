@@ -1,15 +1,19 @@
 name: Iconica Standard App CI Action
 
-# Workflow version: 1.0.0
+# Workflow version: 2.0.0
 
 # https://docs.github.com/en/actions/using-workflows/reusing-workflows
 on:
     workflow_call:
+      inputs:
+        gcp_sa_key_override:
+          description: 'Optional GCP Service Account Key Override'
+          required: false
+          type: string
 
 env:
     PROJECT_ID: ${{ vars.PROJECT_ID }}
-    GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_ICONICA_ONBOARDING }}
-    FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+    GCP_SA_KEY: ${{ secrets[inputs.gcp_sa_key_override || 'GCP_SA_KEY'] }} # Use the override if provided
     DOTENV_BASE64: ${{ secrets.DOTENV_BASE64 }}
 
 jobs:
@@ -25,8 +29,7 @@ jobs:
             - name: Create dotenv file from GitHub Secrets
               env:
                 DOTENV_BASE64: ${{ env.DOTENV_BASE64 }}
-              run: echo -n "${DOTENV_BASE64}" | base64 -d > dotenv                      
-
+              run: echo -n "${DOTENV_BASE64}" | base64 -d > dotenv
             - name: Build Flutter Web App
               run: |
                 flutter pub get
@@ -34,4 +37,4 @@ jobs:
             - name: Deploy to Firebase
               uses: w9jds/firebase-action@master
               with:
-                  args: deploy --only hosting --token "${{ env.FIREBASE_TOKEN }}"
+                  args: deploy --only hosting
