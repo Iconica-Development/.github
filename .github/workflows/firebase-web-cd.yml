@@ -10,7 +10,11 @@ on:
           description: 'Optional GCP Service Account Key Override'
           required: false
           type: string
-
+        use_preview_channel:
+          description: 'Deploy to preview channel or live channel'
+          required: false
+          type: boolean
+          default: false
 env:
     PROJECT_ID: ${{ vars.PROJECT_ID }}
     GCP_SA_KEY: ${{ secrets[inputs.gcp_sa_key_override || 'GCP_SA_KEY'] }} # Use the override if provided
@@ -34,7 +38,23 @@ jobs:
               run: |
                 flutter pub get
                 flutter build web --release --no-tree-shake-icons
+            - name: Determine channel name
+              id: channel_name
+              run: echo "CHANNEL_NAME=$(echo '${{ github.event.pull_request.title || github.run_id }}' | sed 's/[^a-zA-Z0-9]/-/g')" >> $GITHUB_ENV
+            - name: Set Deploy Command
+              id: deploy-command
+              run: echo "DEPLOY_COMMAND=$(if ${{ inputs.use_preview_channel }}; then echo 'hosting:channel:deploy ${CHANNEL_NAME}'; else echo 'deploy --only hosting'; fi)" >> $GITHUB_ENV
+              env:
+                CHANNEL_NAME: ${{ env.CHANNEL_NAME }}
             - name: Deploy to Firebase
               uses: w9jds/firebase-action@master
               with:
-                  args: deploy --only hosting
+                  args: ${{ env.DEPLOY_COMMAND }}
+            # - uses: FirebaseExtended/action-hosting-deploy@v0
+            #   with:
+            #       repoToken: "${{ secrets.GITHUB_TOKEN }}"
+            #       firebaseServiceAccount: "${{ env.GCP_SA_KEY }}"
+            #       projectId: "${{ env.PROJECT_ID }}"
+            #       channelId: live
+            #       expires: 2d
+
