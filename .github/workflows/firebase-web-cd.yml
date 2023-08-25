@@ -44,18 +44,14 @@ jobs:
               run: echo "CHANNEL_NAME=$(echo '${{ github.event.pull_request.title || github.run_id }}' | sed 's/[^a-zA-Z0-9]/-/g')" >> $GITHUB_ENV
             - name: Set Deploy Command
               id: deploy-command
-              run: echo "DEPLOY_COMMAND=$(if ${{ inputs.use_preview_channel }}; then echo 'hosting:channel:deploy ${CHANNEL_NAME}'; else echo 'deploy --only hosting'; fi)" >> $GITHUB_ENV
+              run: echo "DEPLOY_COMMAND=$(if ${{ inputs.use_preview_channel }}; then echo \"${CHANNEL_NAME}\"; else echo 'live'; fi)" >> $GITHUB_ENV
               env:
                 CHANNEL_NAME: ${{ env.CHANNEL_NAME }}
-            - name: Deploy to Firebase
-              uses: w9jds/firebase-action@master
+            - uses: FirebaseExtended/action-hosting-deploy@v0
               with:
-                  args: ${{ env.DEPLOY_COMMAND }}
-            # - uses: FirebaseExtended/action-hosting-deploy@v0
-            #   with:
-            #       repoToken: "${{ secrets.GITHUB_TOKEN }}"
-            #       firebaseServiceAccount: "${{ env.GCP_SA_KEY }}"
-            #       projectId: "${{ env.PROJECT_ID }}"
-            #       channelId: live
-            #       expires: 2d
+                  repoToken: "${{ secrets.GITHUB_TOKEN }}"
+                  firebaseServiceAccount: "${{ env.GCP_SA_KEY }}"
+                  projectId: "${{ env.PROJECT_ID }}"
+                  channelId: "${{ env.DEPLOY_COMMAND }}"
+                  expires: 3d
 

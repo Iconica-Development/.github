@@ -24,7 +24,7 @@ jobs:
               run: flutter pub get
             - name: Create dotenv and .env file from GitHub Secrets
               run: | 
-                if [[ -n "${DOTENV_BASE64} "]]; then
+                if [[ -n "${DOTENV_BASE64}" ]]; then
                     echo -n "${DOTENV_BASE64}" | base64 -d > dotenv
                     echo -n "${DOTENV_BASE64}" | base64 -d > .env
                 else
