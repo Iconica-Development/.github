@@ -12,16 +12,11 @@ jobs:
         timeout-minutes: 10
         steps:
           - uses: actions/checkout@v3
-          - uses: actions/cache@v3
-            with:
-              path: |
-                ~/.gradle/wrapper
-                /opt/hostedtoolcache/flutter
-              key: ${{ runner.OS }}-flutter-install-cache
           - uses: subosito/flutter-action@v2
             with:
               channel: 'stable'
               cache: true
+              cache-key: ${{ runner.OS }}-flutter-install-cache
           - name: Flutter pub get
             run: flutter pub get
           - name: Flutter format

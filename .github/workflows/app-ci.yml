@@ -6,6 +6,9 @@ name: Iconica Standard App CI Action
 on:
     workflow_call:
 
+env:
+    DOTENV_BASE64: ${{ secrets.DOTENV_BASE64 }}
+
 jobs:
     lint:
         runs-on: ubuntu-latest
@@ -19,18 +22,17 @@ jobs:
                 cache-key: ${{ runner.OS }}-flutter-install-cache
             - name: Project preparation
               run: flutter pub get
-            - name: Environment Config Generation
-              run: |
-                if [[ -n "${{ secrets.env_config }}" ]]; then
-                    echo "${{ secrets.env_config }}" > .env
-                    echo "${{ secrets.env_config }}" > dotenv
+            - name: Create dotenv and .env file from GitHub Secrets
+              run: | 
+                if [[ -n "${DOTENV_BASE64} "]]; then
+                    echo -n "${DOTENV_BASE64}" | base64 -d > dotenv
+                    echo -n "${DOTENV_BASE64}" | base64 -d > .env
                 else
                     touch .env
                     touch dotenv
                 fi
-              shell: bash
-              env: 
-                ENV_CONFIG: ${{ secrets.ENV_CONFIG }}
+              env:
+                DOTENV_BASE64: ${{ env.DOTENV_BASE64 }}
             - name: Dart format
               run: dart format -o none --set-exit-if-changed .
             - name: Flutter analyze
