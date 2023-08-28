@@ -1,5 +1,5 @@
 name: Iconica Flutter Caching Workflow
-# Workflow Caller version: 1.0.0
+# Workflow Caller version: 2.0.0
 
 on:
   push:
@@ -12,3 +12,5 @@ jobs:
     uses: Iconica-Development/.github/.github/workflows/flutter-cache.yml@master
     secrets: inherit
     permissions: write-all
+    with:
+      subfolder: '.' # add optional subfolder to run workflow in
