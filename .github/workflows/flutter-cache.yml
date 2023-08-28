@@ -1,13 +1,22 @@
 name: Iconica Flutter Caching Action
 
-# Workflow version: 2.0.0
+# Workflow version: 3.0.0
 
 # https://docs.github.com/en/actions/using-workflows/reusing-workflows
 on:
     workflow_call:
+      inputs:
+        subfolder:
+          type: string
+          description: 'Subfolder where the Flutter project is located'
+          required: false
+          default: '.'
 
 jobs:
     lint:
+        defaults:
+          run:
+            working-directory: ${{ inputs.subfolder }}
         runs-on: ubuntu-latest
         timeout-minutes: 10
         steps:

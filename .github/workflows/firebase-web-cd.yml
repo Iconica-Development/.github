@@ -1,6 +1,6 @@
 name: Iconica Standard App CI Action
 
-# Workflow version: 2.0.0
+# Workflow version: 3.0.0
 
 # https://docs.github.com/en/actions/using-workflows/reusing-workflows
 on:
@@ -15,6 +15,12 @@ on:
           required: false
           type: boolean
           default: false
+        subfolder:
+          type: string
+          description: 'Subfolder where the Flutter project is located'
+          required: false
+          default: '.'
+
 env:
     PROJECT_ID: ${{ vars.PROJECT_ID }}
     GCP_SA_KEY: ${{ secrets[inputs.gcp_sa_key_override || 'GCP_SA_KEY'] }} # Use the override if provided
@@ -22,6 +28,9 @@ env:
 
 jobs:
     build:
+        defaults:
+          run:
+            working-directory: ${{ inputs.subfolder }}
         runs-on: ubuntu-latest
         timeout-minutes: 10
         steps:
