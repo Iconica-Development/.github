@@ -10,6 +10,11 @@ on:
           description: 'Subfolder where the Flutter project is located'
           required: false
           default: '.'
+        additional_commands:
+          type: string
+          description: 'Additional commands to be run after flutter pub get'
+          required: false
+          default: ''
 
 env:
     DOTENV_BASE64: ${{ secrets.DOTENV_BASE64 }}
@@ -30,6 +35,10 @@ jobs:
                 cache-key: ${{ runner.OS }}-flutter-install-cache
             - name: Project preparation
               run: flutter pub get
+            - name: Run additional commands
+              if: inputs.additional_commands != ''
+              run: |
+                  ${{ inputs.additional_commands }}
             - name: Create dotenv and .env file from GitHub Secrets
               run: | 
                 if [[ -n "${DOTENV_BASE64}" ]]; then
