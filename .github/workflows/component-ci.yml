@@ -11,6 +11,12 @@ on:
           description: 'Subfolder where the Flutter project is located'
           required: false
           default: '.'
+        additional_commands:
+          type: string
+          description: 'Additional commands to be run after flutter pub get'
+          required: false
+          default: ''
+
 jobs:
     lint:
         defaults:
@@ -25,6 +31,10 @@ jobs:
               channel: 'stable'
               cache: true
               cache-key: ${{ runner.OS }}-flutter-install-cache
+          - name: Run additional commands
+            if: inputs.additional_commands != ''
+            run: |
+                ${{ inputs.additional_commands }}
           - name: Flutter pub get
             run: flutter pub get
           - name: Flutter format

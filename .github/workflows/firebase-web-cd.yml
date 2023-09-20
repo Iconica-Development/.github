@@ -24,6 +24,11 @@ on:
           type: string
           description: 'Optional target string for action-hosting-deploy'
           required: false
+        additional_commands:
+          type: string
+          description: 'Additional commands to be run after flutter pub get'
+          required: false
+          default: ''
 
 env:
     PROJECT_ID: ${{ vars.PROJECT_ID }}
@@ -48,6 +53,11 @@ jobs:
               env:
                 DOTENV_BASE64: ${{ env.DOTENV_BASE64 }}
               run: echo -n "${DOTENV_BASE64}" | base64 -d > dotenv
+            - name: Run additional commands
+              if: inputs.additional_commands != ''
+              run: |
+                  ${{ inputs.additional_commands }}
+              shell: bash
             - name: Build Flutter Web App
               run: |
                 flutter pub get
