@@ -1,0 +1,55 @@
+name: Iconica Standard Melos CI Action
+# Workflow version: 1.0.0
+
+# https://docs.github.com/en/actions/using-workflows/reusing-workflows
+on:
+    workflow_call:
+      inputs:
+        subfolder:
+          type: string
+          description: 'Subfolder where the Melos project is located'
+          required: false
+          default: '.'
+        additional_commands:
+          type: string
+          description: 'Additional commands to be run after flutter pub get'
+          required: false
+          default: ''
+
+env:
+    DOTENV_BASE64: ${{ secrets.DOTENV_BASE64 }}
+
+jobs:
+    lint:
+        defaults:
+          run:
+            working-directory: ${{ inputs.subfolder }}
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - uses: actions/checkout@v4
+            - uses: subosito/flutter-action@v2
+              with:
+                channel: 'stable'
+                cache: true
+                cache-key: ${{ runner.OS }}-flutter-install-cache
+            - name: Project preparation
+              run: flutter pub get
+            - name: Run additional commands
+              if: inputs.additional_commands != ''
+              run: |
+                  ${{ inputs.additional_commands }}
+            - name: Create dotenv and .env file from GitHub Secrets
+              run: | 
+                if [[ -n "${DOTENV_BASE64}" ]]; then
+                    echo -n "${DOTENV_BASE64}" | base64 -d > dotenv
+                    echo -n "${DOTENV_BASE64}" | base64 -d > .env
+                else
+                    touch .env
+                    touch dotenv
+                fi
+              env:
+                DOTENV_BASE64: ${{ env.DOTENV_BASE64 }}
+            - name: Run Melos CI
+              run: |
+                dart run melos run lint:all

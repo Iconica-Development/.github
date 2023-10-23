@@ -1,0 +1,10 @@
+{
+    "name": "Iconica Standard Melos CI Workflow",
+    "description": "This is a basic Iconica Workflow that calls a central Workflow for checking a melos project before merging. It runs the melos command lint:all",
+    "iconName": "octicon check-circle",
+    "categories": [
+        "continuous-integration",
+        "testing",
+        "code-quality"
+    ]
+}
