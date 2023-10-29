@@ -1,0 +1,131 @@
+name: Build and deploy IOS app to Firebase app distribution
+
+on: 
+  workflow_call:
+    inputs:
+      gcp_sa_key_override:
+        description: 'Optional GCP Service Account Key Override'
+        required: false
+        type: string
+      dotenv_override:
+        description: 'Optional dotenv Override'
+        required: false
+        type: string
+      subfolder:
+        type: string
+        description: 'Subfolder where the Flutter project is located'
+        required: false
+        default: '.'
+      release_groups:
+        type: string
+        description: 'Optional tester groups that will be notified about the new release. Enter a single group or multiple groups as a comma seperated list'
+        required: false
+        default: ''
+
+env:
+  IOS_APP: ${{ vars.IOS_APP }}
+  DOTENV_BASE64: ${{ secrets[inputs.dotenv_override || 'DOTENV_BASE64'] }}
+  PROVISIONING_PROFILE_BASE64: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
+  CERTIFICATE_BASE64: ${{ secrets.CERTIFICATE_BASE64 }}
+  P12_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
+  FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets[inputs.gcp_sa_key_override || 'FIREBASE_SERVICE_ACCOUNT'] }}
+  PROVISIONING_PROFILE_UUID: ${{ secrets.PROVISIONING_PROFILE_UUID }}
+  CODE_SIGN_IDENTITY: ${{ secrets.CODE_SIGN_IDENTITY }}
+  DEVELOPMENT_TEAM: ${{ secrets.DEVELOPMENT_TEAM }}
+  BUNDLE_IDENTIFIER: ${{ secrets.BUNDLE_IDENTIFIER }}
+
+jobs:            
+    build-ios:
+      defaults:
+        run:
+          working-directory: ${{ inputs.subfolder }}
+      name: Build iOS app
+      runs-on: macos-13
+      timeout-minutes: 20
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4 
+
+        - name: Install Flutter
+          uses: subosito/flutter-action@v2
+          with:
+            channel: 'stable'
+            cache: true
+            cache-key: ${{ runner.OS }}-flutter-install-cache
+
+        - name: Install provisioning profile and certificate
+          env:
+            CERTIFICATE_PATH: "./certificate.p12"
+            PP_PATH: "./provisioning_profile.mobileprovision"
+            KEYCHAIN_PASSWORD: ""
+          working-directory: ${{ inputs.subfolder }}/ios
+          run: |
+            KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+            echo ${PROVISIONING_PROFILE_BASE64} | base64 -d > ./provisioning_profile.mobileprovision
+            echo ${CERTIFICATE_BASE64} | base64 -d > ./certificate.p12
+            security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+            security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+            security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+            security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+            security list-keychain -d user -s $KEYCHAIN_PATH
+            mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+            cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
+          
+        - name: Install Firebase CLI
+          run: npm install -g firebase-tools
+        
+        - name: Create dotenv file from GitHub Secrets
+          run: echo -n "${DOTENV_BASE64}" | base64 -d > dotenv
+
+        - name: Install Flutter dependencies
+          run: flutter clean && flutter pub get   
+         
+        - name: Install pods
+          working-directory: ${{ inputs.subfolder }}/ios
+          run: pod install
+
+        - name: Generate ExportOptions.plist
+          run: |
+            echo "<plist><dict>\
+            <key>method</key><string>development</string>\
+            <key>teamID</key><string>${DEVELOPMENT_TEAM}</string>\
+            <key>signingCertificate</key><string>${CODE_SIGN_IDENTITY}</string>\
+            <key>provisioningProfiles</key><dict>\
+            <key>${BUNDLE_IDENTIFIER}</key><string>${PROVISIONING_PROFILE_UUID}</string>\
+            </dict></dict></plist>" > ./ios/ExportOptions.plist
+
+        - name: Build ipa
+          working-directory: ${{ inputs.subfolder }}/ios
+          run: |
+              xcodebuild clean archive \
+              -workspace Runner.xcworkspace \
+              -scheme Runner \
+              -archivePath ./build/Runner.xcarchive \
+              CODE_SIGN_STYLE=Manual \
+              CODE_SIGN_IDENTITY="${CODE_SIGN_IDENTITY}" \
+              PROVISIONING_PROFILE="${PROVISIONING_PROFILE_UUID}" \
+              DEVELOPMENT_TEAM="${DEVELOPMENT_TEAM}" \
+              CODE_SIGN_KEYCHAIN=$RUNNER_TEMP/app-signing.keychain-db
+
+        - name: Export ipa
+          working-directory: ${{ inputs.subfolder }}/ios
+          run: |
+              xcodebuild -exportArchive \
+              -archivePath ./build/Runner.xcarchive \
+              -exportPath ./build \
+              -exportOptionsPlist ./ExportOptions.plist
+
+        - name: Rename ipa
+          run: |
+              IPA_FILE=$(find ./ios/build -name "*.ipa")
+              mv $IPA_FILE ./ios/build/app.ipa
+        
+        - name: Distribute app to firebase
+          run: | 
+            echo "${FIREBASE_SERVICE_ACCOUNT_JSON}" > service_account.json
+            export GOOGLE_APPLICATION_CREDENTIALS=service_account.json
+            command="firebase appdistribution:distribute ./ios/build/app.ipa --app ${IOS_APP}"
+            if [ -n "${{ inputs.release_groups }}" ]; then
+            command="$command --groups '${{ inputs.release_groups }}'"
+            fi
+            $command
