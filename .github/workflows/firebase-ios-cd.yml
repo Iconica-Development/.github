@@ -41,7 +41,7 @@ jobs:
           working-directory: ${{ inputs.subfolder }}
       name: Build iOS app
       runs-on: macos-13
-      timeout-minutes: 30
+      timeout-minutes: 50
       steps:
         - name: Checkout repository
           uses: actions/checkout@v4 
@@ -78,9 +78,18 @@ jobs:
           run: echo -n "${DOTENV_BASE64}" | base64 -d > dotenv
 
         - name: Install Flutter dependencies
-          run: flutter clean && flutter pub get   
+          run: flutter clean && flutter pub get 
+          
+        - name: Cache CocoaPods
+          id: cocoapods-cache
+          uses: actions/cache@v3
+          with:
+            path: ${{ inputs.subfolder }}/ios/Pods
+            key: ${{ runner.os }}-pods-${{ hashFiles(format('{0}/ios/Podfile.lock', inputs.subfolder)) }}
+            restore-keys: ${{ runner.os }}-pods-
          
         - name: Install pods
+          if: steps.cocoapods-cache.outputs.cache-hit != 'true'
           working-directory: ${{ inputs.subfolder }}/ios
           run: pod install
 
