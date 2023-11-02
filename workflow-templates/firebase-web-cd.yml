@@ -20,7 +20,7 @@ jobs:
     secrets: inherit
     permissions: write-all
     with:
-      gcp_sa_key_override: '(KEY TO BE USED WHEN IT IS NOT CALLED): GCP_SA_KEY'
+      firebase_service_account_override: '(KEY TO BE USED WHEN IT IS NOT CALLED): FIREBASE_SERVICE_ACCOUNT'
       # pass a true value to use the preview channel for pull requests, use workflow_dispatch input, or default to false
       use_preview_channel: ${{ (github.event_name == 'pull_request' && true) || github.event.inputs.use_preview_channel == 'true' || false }}
       subfolder: '.' # add optional subfolder to run workflow in
