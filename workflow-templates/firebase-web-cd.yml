@@ -1,5 +1,5 @@
 name: Build and Deploy Firebase Web Application
-# Workflow Caller version: 3.0.0
+# Workflow Caller version: 4.0.0
 
 on:
   push:

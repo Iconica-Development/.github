@@ -1,6 +1,6 @@
 name: Iconica Standard App CI Action
 
-# Workflow version: 3.0.0
+# Workflow version: 4.0.0
 
 # https://docs.github.com/en/actions/using-workflows/reusing-workflows
 on:

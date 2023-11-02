@@ -1,4 +1,5 @@
 name: Build and Deploy Android apk to Firebase app distribution
+# Workflow version: 1.0.0
 
 on: 
   workflow_call:

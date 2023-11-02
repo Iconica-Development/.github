@@ -1,4 +1,5 @@
 name: Build and deploy IOS app to Firebase app distribution
+# Workflow version: 1.0.0
 
 on: 
   workflow_call:
