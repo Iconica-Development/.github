@@ -21,7 +21,7 @@ on:
 jobs:
   call-global-iconica-build-apk-workflow:
     if: inputs.release_android
-    uses: Iconica-Development/.github/.github/workflows/firebase-android-cd.yml@feature/android-build-and-distribution-cd
+    uses: Iconica-Development/.github/.github/workflows/firebase-android-cd.yml@master
     secrets: inherit
     permissions: write-all
     with:
@@ -32,7 +32,7 @@ jobs:
 
   call-global-iconica-build-ios-workflow:
     if: inputs.release_ios
-    uses: Iconica-Development/.github/.github/workflows/firebase-ios-cd.yml@feature/ios-build-and-distribution-cd
+    uses: Iconica-Development/.github/.github/workflows/firebase-ios-cd.yml@master
     secrets: inherit
     permissions: write-all
     with:
