@@ -1,10 +1,11 @@
 name: Build and deploy IOS app to Firebase app distribution
+# Workflow version: 1.0.0
 
 on: 
   workflow_call:
     inputs:
-      gcp_sa_key_override:
-        description: 'Optional GCP Service Account Key Override'
+      firebase_service_account_override:
+        description: 'Optional Firebase Service Account Key Override'
         required: false
         type: string
       dotenv_override:
@@ -28,7 +29,7 @@ env:
   PROVISIONING_PROFILE_BASE64: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
   CERTIFICATE_BASE64: ${{ secrets.CERTIFICATE_BASE64 }}
   P12_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
-  FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets[inputs.gcp_sa_key_override || 'FIREBASE_SERVICE_ACCOUNT'] }}
+  FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets[inputs.firebase_service_account_override || 'FIREBASE_SERVICE_ACCOUNT'] }}
   PROVISIONING_PROFILE_UUID: ${{ secrets.PROVISIONING_PROFILE_UUID }}
   CODE_SIGN_IDENTITY: ${{ secrets.CODE_SIGN_IDENTITY }}
   DEVELOPMENT_TEAM: ${{ secrets.DEVELOPMENT_TEAM }}

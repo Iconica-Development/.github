@@ -1,10 +1,11 @@
 name: Build and Deploy Android apk to Firebase app distribution
+# Workflow version: 1.0.0
 
 on: 
   workflow_call:
     inputs:
-      gcp_sa_key_override:
-        description: 'Optional GCP Service Account Key Override'
+      firebase_service_account_override:
+        description: 'Optional Firebase Service Account Key Override'
         required: false
         type: string
       dotenv_override:
@@ -25,7 +26,7 @@ on:
 env:
   ANDROID_APP: ${{ vars.ANDROID_APP }}
   DOTENV_BASE64: ${{ secrets[inputs.dotenv_override || 'DOTENV_BASE64'] }}
-  FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets[inputs.gcp_sa_key_override || 'FIREBASE_SERVICE_ACCOUNT'] }}
+  FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets[inputs.firebase_service_account_override || 'FIREBASE_SERVICE_ACCOUNT'] }}
 
 
 jobs:

@@ -73,7 +73,7 @@ PROVISIONING_PROFILE_UUID | secret | true
 
 The value of the secret CERTIFICATE_PASSWORD is the password you added to the certificate in step 1.11. If you chose not to add the password, you can skip this secret.
 
-### 3.1 Extract secret values from provisioning profile
+### 4.1 Extract secret values from provisioning profile
 You can extract the following values for the secrets from the provisioning profile:
 - BUNDLE_IDENTIFIER
 - PROVISIONING_PROFILE_UUID
@@ -84,26 +84,26 @@ Navigate to your provisioning profile in Finder and open it by pressing the spac
 
 ![](assets/provisioning_profile.jpeg)
 
-### 3.2 Generate the base64 secrets
+### 4.2 Generate the base64 secrets
 To generate the secrets CERTIFICATE_BASE64, PROVISIONING_PROFILE_BASE64, and DOTENV_BASE64 from the terminal, you will need the certificate and provisioning profile you created earlier. The use of DOTENV is optional and is only required when your project uses a dotenv file.
 
 1. Open the terminal and cd to the directory where the certificate, provisioning profile, or dotenv file is located.
 2. Execute the command "base64 -i file.xx" in the terminal, replacing "file.xx" with the name of the provisioning profile, certificate, or dotenv file. This command will provide the string value that should be added as the GitHub secret.
 
 
-### 3.3 Get the IOS_APP variable
+### 4.3 Get the IOS_APP variable
  1. Open your project in the [Firebase Console](https://console.firebase.google.com).
  2. Navigate to Project Settings and scroll down until you reach the "Your Apps" section.
  3. Click on the iOS app you're working with.
  4. Locate the App ID, which corresponds to the value of the IOS_APP variable.
    
 
-### 3.4 Firebase service account
+### 4.4 Firebase service account
 TBD
 
 
 
-### 3.5 Add the secrets to github
+### 4.5 Add the secrets to github
  1. Open the repository in github.
  2. Navigate to Settings → Secrets and variables → Actions.
  3. Depending on whether you're adding a secret or a variable, click "New Repository Secret" or first select "Variables" and then "New Repository Variable."
@@ -111,7 +111,7 @@ TBD
  5. Provide the secret/variable value, and then click "Add Secret" or "Add Variable."
 
 
-## 4. Modify Podfile
+## 5. Modify Podfile
  To ensure that the pipeline doesn't attempt to sign the installed Pods, you'll need to add specific code to your Podfile. This is necessary because, by default, the pipeline signs the app manually, which can cause issues with certain Pods that do not allow signing.
 
  ```Ruby
@@ -128,7 +128,7 @@ end
 
 If the post_install already exists in the Podfile, make sure you merge the two functions together to not break the existing code. If the function doesn't exist yet, add it to the end of the Podfile.
 
-## 5. Add the workflow to the repository
+## 6. Add the workflow to the repository
 If you've followed the first four steps, your repository is now correctly configured. 
 
 1. Copy the [app-firebase-cd.yml](../../../workflow-templates/app-firebase-cd.yml) template and add it to your GitHub workflows folder.
@@ -137,7 +137,7 @@ If you've followed the first four steps, your repository is now correctly config
 4. If you've named the secrets differently from FIREBASE_SERVICE_ACCOUNT or DOTENV_BASE64, you can provide their actual names using the variables "gcp_sa_kay_override" and "dotenv_override," respectively. If you didn't, you can simply omit these variables.
 
 
-## 6. Run the workflow
+## 7. Run the workflow
 To execute the workflow, ensure that it is pushed to the default branch, and then follow these steps:
 
    1.  Open GitHub and go to the "Actions" tab.

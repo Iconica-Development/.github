@@ -1,13 +1,13 @@
 name: Iconica Standard App CI Action
 
-# Workflow version: 3.0.0
+# Workflow version: 4.0.0
 
 # https://docs.github.com/en/actions/using-workflows/reusing-workflows
 on:
     workflow_call:
       inputs:
-        gcp_sa_key_override:
-          description: 'Optional GCP Service Account Key Override'
+        firebase_service_account_override:
+          description: 'Optional Firebase Service Account Key Override'
           required: false
           type: string
         use_preview_channel:
@@ -32,7 +32,7 @@ on:
 
 env:
     PROJECT_ID: ${{ vars.PROJECT_ID }}
-    GCP_SA_KEY: ${{ secrets[inputs.gcp_sa_key_override || 'GCP_SA_KEY'] }} # Use the override if provided
+    FIREBASE_SERVICE_ACCOUNT: ${{ secrets[inputs.firebase_service_account_override || 'FIREBASE_SERVICE_ACCOUNT'] }} # Use the override if provided
     DOTENV_BASE64: ${{ secrets.DOTENV_BASE64 }}
 
 jobs:
@@ -73,9 +73,10 @@ jobs:
             - uses: FirebaseExtended/action-hosting-deploy@v0
               with:
                   repoToken: "${{ secrets.GITHUB_TOKEN }}"
-                  firebaseServiceAccount: "${{ env.GCP_SA_KEY }}"
+                  firebaseServiceAccount: "${{ env.FIREBASE_SERVICE_ACCOUNT }}"
                   projectId: "${{ env.PROJECT_ID }}"
                   channelId: "${{ env.DEPLOY_COMMAND }}"
                   target: "${{ inputs.target }}"
                   expires: 3d
+                  entryPoint: "${{ inputs.subfolder }}"
 

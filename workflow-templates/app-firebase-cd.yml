@@ -1,4 +1,5 @@
 name: Build and Deploy Firebase App for Android and iOS
+# Workflow Caller version: 1.0.0
 
 on:
   workflow_dispatch:
@@ -26,7 +27,7 @@ jobs:
     permissions: write-all
     with:
         subfolder: 'optional_subfolder' # add optional subfolder to run workflow in
-        gcp_sa_key_override: 'YOUR_GCP_KEY_SECRET_NAME_HERE' # only add this when your secret GCP Key is not called FIREBASE_SERVICE_ACCOUNT
+        firebase_service_account_override: 'YOUR_FIREBASE_SERVICE_ACCOUNT_SECRET_NAME_HERE' # only add this when your secret firebase service account is not called FIREBASE_SERVICE_ACCOUNT
         dotenv_override: 'YOUR_DOTENV_SECRET_NAME_HERE' # only add this when your secret dotenv is not called DOTENV_BASE64
         release_groups: '${{ inputs.release_groups }}'
 
@@ -37,6 +38,6 @@ jobs:
     permissions: write-all
     with:
         subfolder: 'optional_subfolder' # add optional subfolder to run workflow in
-        gcp_sa_key_override: 'YOUR_GCP_KEY_SECRET_NAME_HERE' # only add this when your secret GCP Key is not called FIREBASE_SERVICE_ACCOUNT
+        firebase_service_account_override: 'YOUR_FIREBASE_SERVICE_ACCOUNT_SECRET_NAME_HERE' # only add this when your secret firebase service account is not called FIREBASE_SERVICE_ACCOUNT
         dotenv_override: 'YOUR_DOTENV_SECRET_NAME_HERE' # only add this when your secret dotenv is not called DOTENV_BASE64
         release_groups: '${{ inputs.release_groups }}'
