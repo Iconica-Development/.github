@@ -1,0 +1,79 @@
+name: Build and Deploy Android apk to Firebase app distribution
+
+on: 
+  workflow_call:
+    inputs:
+      gcp_sa_key_override:
+        description: 'Optional GCP Service Account Key Override'
+        required: false
+        type: string
+      dotenv_override:
+        description: 'Optional dotenv Override'
+        required: false
+        type: string
+      subfolder:
+        type: string
+        description: 'Subfolder where the Flutter project is located'
+        required: false
+        default: '.'
+      release_groups:
+        type: string
+        description: 'Optional tester groups that will be notified about the new release. Enter a single group or multiple groups as a comma seperated list'
+        required: false
+        default: ''
+
+env:
+  ANDROID_APP: ${{ vars.ANDROID_APP }}
+  DOTENV_BASE64: ${{ secrets[inputs.dotenv_override || 'DOTENV_BASE64'] }}
+  FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets[inputs.gcp_sa_key_override || 'FIREBASE_SERVICE_ACCOUNT'] }}
+
+
+jobs:
+    build-android:
+        defaults:
+          run:
+            working-directory: ${{ inputs.subfolder }}
+        name: Build Android apk
+        runs-on: ubuntu-latest
+        timeout-minutes: 20
+        steps:
+
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Install Flutter
+              uses: subosito/flutter-action@v2
+              with:
+                channel: 'stable'
+                cache: true
+                cache-key: ${{ runner.OS }}-flutter-install-cache
+
+            - name: Set up JDK
+              uses: actions/setup-java@v3
+              with:
+                java-version: '17'
+                distribution: 'temurin'
+
+            - name: Setup Android SDK
+              uses: android-actions/setup-android@v3
+
+            - name: Install Firebase CLI
+              run: npm install -g firebase-tools
+
+            - name: Create dotenv file from GitHub Secrets
+              run: echo -n "${DOTENV_BASE64}" | base64 -d > dotenv  
+
+            - name: Build apk
+              run: |
+                flutter clean
+                flutter build apk --release --no-tree-shake-icons
+
+            - name: Distribute to firebase
+              run: | 
+                echo "${FIREBASE_SERVICE_ACCOUNT_JSON}" > service_account.json
+                export GOOGLE_APPLICATION_CREDENTIALS=service_account.json
+                command="firebase appdistribution:distribute ./build/app/outputs/flutter-apk/app-release.apk --app ${ANDROID_APP}"
+                if [ -n "${{ inputs.release_groups }}" ]; then
+                command="$command --groups \"${{ inputs.release_groups }}\""
+                fi
+                $command
