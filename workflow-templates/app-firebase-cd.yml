@@ -1,0 +1,42 @@
+name: Build and Deploy Firebase App for Android and iOS
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_groups:
+        description: 'Optional tester groups that will be notified about the new release. Enter a single group or multiple groups as a comma seperated list (case sensitive). '
+        required: false
+        type: string
+        default: ''
+      release_android:
+        description: 'Build & Release for Android'
+        type: boolean
+        default: true
+      release_ios:
+        description: 'Build & Release for iOS'
+        type: boolean
+        default: true
+
+
+jobs:
+  call-global-iconica-build-apk-workflow:
+    if: inputs.release_android
+    uses: Iconica-Development/.github/.github/workflows/firebase-android-cd.yml@master
+    secrets: inherit
+    permissions: write-all
+    with:
+        subfolder: 'optional_subfolder' # add optional subfolder to run workflow in
+        gcp_sa_key_override: 'YOUR_GCP_KEY_SECRET_NAME_HERE' # only add this when your secret GCP Key is not called FIREBASE_SERVICE_ACCOUNT
+        dotenv_override: 'YOUR_DOTENV_SECRET_NAME_HERE' # only add this when your secret dotenv is not called DOTENV_BASE64
+        release_groups: '${{ inputs.release_groups }}'
+
+  call-global-iconica-build-ios-workflow:
+    if: inputs.release_ios
+    uses: Iconica-Development/.github/.github/workflows/firebase-ios-cd.yml@master
+    secrets: inherit
+    permissions: write-all
+    with:
+        subfolder: 'optional_subfolder' # add optional subfolder to run workflow in
+        gcp_sa_key_override: 'YOUR_GCP_KEY_SECRET_NAME_HERE' # only add this when your secret GCP Key is not called FIREBASE_SERVICE_ACCOUNT
+        dotenv_override: 'YOUR_DOTENV_SECRET_NAME_HERE' # only add this when your secret dotenv is not called DOTENV_BASE64
+        release_groups: '${{ inputs.release_groups }}'
