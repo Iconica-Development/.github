@@ -99,7 +99,7 @@ To generate the secrets CERTIFICATE_BASE64, PROVISIONING_PROFILE_BASE64, and DOT
    
 
 ### 3.4 Firebase service account
-Freeeeeeek
+TBD
 
 
 
