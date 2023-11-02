@@ -135,6 +135,6 @@ jobs:
             export GOOGLE_APPLICATION_CREDENTIALS=service_account.json
             command="firebase appdistribution:distribute ./ios/build/app.ipa --app ${IOS_APP}"
             if [ -n "${{ inputs.release_groups }}" ]; then
-            command="$command --groups '${{ inputs.release_groups }}'"
+            command="$command --groups \"${{ inputs.release_groups }}\""
             fi
             $command
