@@ -41,6 +41,8 @@ A list of all the Gifs of the packages can be found [here](./profile/FEATURES.md
 
 | Package | Latest Tag | Last Updated | Melos | Link | Example | Features |
 | ------- | ---------- | ------------ | ----- | ---- | ------- | -------- |
+| Flutter-Neumorphic | Not Released |  | No | [code](https://github.com/Iconica-Development/Flutter-Neumorphic) | [example](https://github.com/Iconica-Development/Flutter-Neumorphic/tree/master/example) |  |
+| email_password_login | Not Released |  | No | [code](https://github.com/Iconica-Development/email_password_login) | [example](https://github.com/Iconica-Development/email_password_login/tree/master/example) |  |
 | flutter_address_form | Not Released |  | No | [code](https://github.com/Iconica-Development/flutter_address_form) | [example](https://github.com/Iconica-Development/flutter_address_form/tree/master/example) |  |
 | flutter_agenda | 1.1.0 | 2023-08-17 | No | [code](https://github.com/Iconica-Development/flutter_agenda) | [example](https://github.com/Iconica-Development/flutter_agenda/tree/master/example) | [features](https://github.com/Iconica-Development/flutter_agenda/tree/master/FEATURES.md) |
 | flutter_animated_toggle | Not Released |  | No | [code](https://github.com/Iconica-Development/flutter_animated_toggle) | [example](https://github.com/Iconica-Development/flutter_animated_toggle/tree/master/example) |  |
@@ -51,7 +53,7 @@ A list of all the Gifs of the packages can be found [here](./profile/FEATURES.md
 | flutter_community_chat | 0.4.0 | 2023-11-06 | Yes | [code](https://github.com/Iconica-Development/flutter_community_chat) | [example](https://github.com/Iconica-Development/flutter_community_chat/tree/master/example) | [features](https://github.com/Iconica-Development/flutter_community_chat/tree/master/FEATURES.md) |
 | flutter_custom_html_element_web | 0.0.1 | 2023-07-11 | No | [code](https://github.com/Iconica-Development/flutter_custom_html_element_web) | [example](https://github.com/Iconica-Development/flutter_custom_html_element_web/tree/master/example) |  |
 | flutter_data_interface | 1.0.0 | 2023-05-26 | No | [code](https://github.com/Iconica-Development/flutter_data_interface) | [example](https://github.com/Iconica-Development/flutter_data_interface/tree/master/example) |  |
-| flutter_date_time_picker | 3.3.3 | 2023-10-26 | No | [code](https://github.com/Iconica-Development/flutter_date_time_picker) | [example](https://github.com/Iconica-Development/flutter_date_time_picker/tree/master/example) |  |
+| flutter_date_time_picker | 4.0.0 | 2023-11-07 | No | [code](https://github.com/Iconica-Development/flutter_date_time_picker) | [example](https://github.com/Iconica-Development/flutter_date_time_picker/tree/master/example) |  |
 | flutter_dialogs | Not Released |  | No | [code](https://github.com/Iconica-Development/flutter_dialogs) | [example](https://github.com/Iconica-Development/flutter_dialogs/tree/master/example) |  |
 | flutter_form_wizard | 6.1.7 | 2023-11-01 | No | [code](https://github.com/Iconica-Development/flutter_form_wizard) | [example](https://github.com/Iconica-Development/flutter_form_wizard/tree/master/example) |  |
 | flutter_google_track_and_trace | 2.0.1 | 2023-11-01 | No | [code](https://github.com/Iconica-Development/flutter_google_track_and_trace) | [example](https://github.com/Iconica-Development/flutter_google_track_and_trace/tree/master/example) |  |
@@ -77,10 +79,11 @@ A list of all the Gifs of the packages can be found [here](./profile/FEATURES.md
 | flutter_rbac_service | Not Released |  | Yes | [code](https://github.com/Iconica-Development/flutter_rbac_service) | [example](https://github.com/Iconica-Development/flutter_rbac_service/tree/master/example) |  |
 | flutter_registration | 1.2.0 | 2023-10-16 | No | [code](https://github.com/Iconica-Development/flutter_registration) | [example](https://github.com/Iconica-Development/flutter_registration/tree/master/example) |  |
 | flutter_roadmap_component | Not Released |  | No | [code](https://github.com/Iconica-Development/flutter_roadmap_component) | [example](https://github.com/Iconica-Development/flutter_roadmap_component/tree/master/example) |  |
-| flutter_roster | 2.3.0 | 2023-10-26 | No | [code](https://github.com/Iconica-Development/flutter_roster) | [example](https://github.com/Iconica-Development/flutter_roster/tree/master/example) |  |
+| flutter_roster | 2.5.0 | 2023-11-10 | No | [code](https://github.com/Iconica-Development/flutter_roster) | [example](https://github.com/Iconica-Development/flutter_roster/tree/master/example) |  |
 | flutter_single_character_input | 0.0.2 | 2023-05-15 | No | [code](https://github.com/Iconica-Development/flutter_single_character_input) | [example](https://github.com/Iconica-Development/flutter_single_character_input/tree/master/example) |  |
 | flutter_splashscreen | Not Released |  | No | [code](https://github.com/Iconica-Development/flutter_splashscreen) | [example](https://github.com/Iconica-Development/flutter_splashscreen/tree/master/example) |  |
 | flutter_stepper | 2.1.0 | 2023-02-22 | No | [code](https://github.com/Iconica-Development/flutter_stepper) | [example](https://github.com/Iconica-Development/flutter_stepper/tree/master/example) |  |
 | flutter_timeline | Not Released |  | Yes | [code](https://github.com/Iconica-Development/flutter_timeline) | [example](https://github.com/Iconica-Development/flutter_timeline/tree/master/example) | [features](https://github.com/Iconica-Development/flutter_timeline/tree/master/FEATURES.md) |
-| flutter_timetable | 1.1.0 | 2023-08-17 | No | [code](https://github.com/Iconica-Development/flutter_timetable) | [example](https://github.com/Iconica-Development/flutter_timetable/tree/master/example) |  |
+| flutter_timetable | 1.3.0 | 2023-11-10 | No | [code](https://github.com/Iconica-Development/flutter_timetable) | [example](https://github.com/Iconica-Development/flutter_timetable/tree/master/example) |  |
 | flutter_to_do_list | 0.1.0 | 2023-10-30 | No | [code](https://github.com/Iconica-Development/flutter_to_do_list) | [example](https://github.com/Iconica-Development/flutter_to_do_list/tree/master/example) |  |
+| vimeo_video_player | Not Released |  | No | [code](https://github.com/Iconica-Development/vimeo_video_player) | [example](https://github.com/Iconica-Development/vimeo_video_player/tree/master/example) |  |
