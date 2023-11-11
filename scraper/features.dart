@@ -7,8 +7,8 @@ void main() async {
   var output = '';
 
   // add the header
-  output += '| Package | Description | Link | Gif | Image |\n';
-  output += '| ------- | ----------- | ---- | --- | ----- |\n';
+  output += '| Package | Description | Link | Gif | Image | Figma |\n';
+  output += '| ------- | ----------- | ---- | --- | ----- | ----- |\n';
   var pageIndex = 1;
   var lastPageReached = false;
   List elements = [];
@@ -39,9 +39,22 @@ void main() async {
         .toString()
         .split('/Iconica-Development/')
         .last;
-    if (name.startsWith('flutter_')) {
-      // TODO(freek): also check for repositories with topic 'component'
+
+    // Check if the repository name starts with 'flutter_' or has 'component' topic
+    bool isComponent = name.startsWith('flutter_');
+    if (!isComponent) {
+      // Load the repository page to check for topics
+      if (await webScraper.loadWebPage('/Iconica-Development/$name')) {
+        var topics = webScraper.getElement('a.topic-tag.topic-tag-link', []);
+        isComponent = topics
+            .any((topic) => topic['title'].toString().contains('component'));
+      }
+    }
+
+    if (isComponent) {
       await Future.delayed(Duration(milliseconds: 200));
+      var figmaLink = '';
+
       var pageLink = 'https://github.com/Iconica-Development/$name';
 
       // check the master branch to search for .gif files
@@ -74,6 +87,14 @@ void main() async {
         // look in the readme.md file for a gif or mp4 reference
         if (await webScraper
             .loadWebPage('/Iconica-Development/$name/blob/master/README.md')) {
+          var readmeContent = webScraper.getPageContent();
+          var figmaLinkRegex = RegExp(r'https://[www.]*figma.com/[^)\s]*');
+          var matches = figmaLinkRegex.allMatches(readmeContent);
+
+          if (matches.isNotEmpty) {
+            // Take the first Figma link found
+            figmaLink = matches.first.group(0) ?? '';
+          }
           var imageElements = webScraper.getElement('img', ['src']);
           for (var element in imageElements) {
             var src = element['attributes']['src'].toString();
@@ -103,8 +124,10 @@ void main() async {
           var chosenImage = images.isNotEmpty
               ? '![Example Image of package](${images.first})'
               : ' no image';
+          // only show the figma link if it is not empty
+          var figma = figmaLink.isNotEmpty ? '[Figma]($figmaLink)' : '';
           output +=
-              '| $name | $description | [code]($pageLink) | $chosenGif | $chosenImage |\n ';
+              '| $name | $description | [code]($pageLink) | $chosenGif | $chosenImage | $figma |\n';
         }
       }
     }

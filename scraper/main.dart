@@ -43,7 +43,19 @@ void main() async {
         .toString()
         .split('/Iconica-Development/')
         .last;
-    if (name.startsWith('flutter_')) {
+
+    // Check if the repository name starts with 'flutter_' or has 'component' topic
+    bool isComponent = name.startsWith('flutter_');
+    if (!isComponent) {
+      // Load the repository page to check for topics
+      if (await webScraper.loadWebPage('/Iconica-Development/$name')) {
+        var topics = webScraper.getElement('a.topic-tag.topic-tag-link', []);
+        isComponent = topics
+            .any((topic) => topic['title'].toString().contains('component'));
+      }
+    }
+
+    if (isComponent) {
       var melos = false;
       var features = false;
       await Future.delayed(Duration(milliseconds: 100));
