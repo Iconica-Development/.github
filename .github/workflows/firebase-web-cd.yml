@@ -1,6 +1,6 @@
 name: Iconica Standard App CI Action
 
-# Workflow version: 4.0.0
+# Workflow version: 5.0.0
 
 # https://docs.github.com/en/actions/using-workflows/reusing-workflows
 on:
@@ -29,11 +29,15 @@ on:
           description: 'Additional commands to be run after flutter pub get'
           required: false
           default: ''
+        dotenv_override:
+          description: 'Optional dotenv Override'
+          required: false
+          type: string
 
 env:
     PROJECT_ID: ${{ vars.PROJECT_ID }}
     FIREBASE_SERVICE_ACCOUNT: ${{ secrets[inputs.firebase_service_account_override || 'FIREBASE_SERVICE_ACCOUNT'] }} # Use the override if provided
-    DOTENV_BASE64: ${{ secrets.DOTENV_BASE64 }}
+    DOTENV_BASE64: ${{ secrets[inputs.dotenv_override || 'DOTENV_BASE64'] }}
 
 jobs:
     build:

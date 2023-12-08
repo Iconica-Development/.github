@@ -1,5 +1,5 @@
 name: Build and Deploy Firebase Web Application
-# Workflow Caller version: 4.0.0
+# Workflow Caller version: 5.0.0
 
 on:
   push:
@@ -24,3 +24,4 @@ jobs:
       # pass a true value to use the preview channel for pull requests, use workflow_dispatch input, or default to false
       use_preview_channel: ${{ (github.event_name == 'pull_request' && true) || github.event.inputs.use_preview_channel == 'true' || false }}
       subfolder: '.' # add optional subfolder to run workflow in
+      dotenv_override: 'DOTENV_BASE64'
