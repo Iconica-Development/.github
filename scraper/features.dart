@@ -7,8 +7,10 @@ void main() async {
   var output = '';
 
   // add the header
-  output += '| Package | Description | Link | Gif | Image | Figma |\n';
-  output += '| ------- | ----------- | ---- | --- | ----- | ----- |\n';
+  output +=
+      '| Package | Description | Link | Gif | Image | Figma Design | Clickable prototype|\n';
+  output +=
+      '| ------- | ----------- | ---- | --- | ----- | ------------ | ------------------ |\n';
   var pageIndex = 1;
   var lastPageReached = false;
   List elements = [];
@@ -53,10 +55,10 @@ void main() async {
 
     if (isComponent) {
       await Future.delayed(Duration(milliseconds: 200));
-      var figmaLink = '';
 
       var pageLink = 'https://github.com/Iconica-Development/$name';
-
+      var figmaDesignLink = '';
+      var clickablePrototypeLink = '';
       // check the master branch to search for .gif files
       if (await webScraper.loadWebPage('/Iconica-Development/$name')) {
         var images = <String>[];
@@ -89,11 +91,29 @@ void main() async {
             .loadWebPage('/Iconica-Development/$name/blob/master/README.md')) {
           var readmeContent = webScraper.getPageContent();
           var figmaLinkRegex = RegExp(r'https://[www.]*figma.com/[^)\s]*');
-          var matches = figmaLinkRegex.allMatches(readmeContent);
+          var figmaLinks = figmaLinkRegex.allMatches(readmeContent);
 
-          if (matches.isNotEmpty) {
-            // Take the first Figma link found
-            figmaLink = matches.first.group(0) ?? '';
+          // get the first link that contains proto and file
+          if (figmaLinks.isNotEmpty) {
+            print(figmaLinks.first.group(0).toString());
+
+            if (figmaLinks.any(
+                (element) => element.group(0).toString().contains('/proto/'))) {
+              print('found clickable prototype');
+              clickablePrototypeLink = figmaLinks
+                  .firstWhere((element) =>
+                      element.group(0).toString().contains('/proto/'))
+                  .group(0)
+                  .toString();
+            } else if (figmaLinks.any(
+                (element) => element.group(0).toString().contains('/file/'))) {
+              print('found figma design');
+              figmaDesignLink = figmaLinks
+                  .firstWhere((element) =>
+                      element.group(0).toString().contains('/file/'))
+                  .group(0)
+                  .toString();
+            }
           }
           var imageElements = webScraper.getElement('img', ['src']);
           for (var element in imageElements) {
@@ -125,9 +145,14 @@ void main() async {
               ? '![Example Image of package](${images.first})'
               : ' no image';
           // only show the figma link if it is not empty
-          var figma = figmaLink.isNotEmpty ? '[Figma]($figmaLink)' : '';
+          var figmaDesign = figmaDesignLink.isNotEmpty
+              ? '[Figma Design]($figmaDesignLink)'
+              : '';
+          var clickablePrototype = clickablePrototypeLink.isNotEmpty
+              ? '[Clickable Prototype]($clickablePrototypeLink)'
+              : '';
           output +=
-              '| $name | $description | [code]($pageLink) | $chosenGif | $chosenImage | $figma |\n';
+              '| $name | $description | [code]($pageLink) | $chosenGif | $chosenImage | $figmaDesign | $clickablePrototype |\n';
         }
       }
     }
