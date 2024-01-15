@@ -79,7 +79,7 @@ jobs:
           run: echo -n "${DOTENV_BASE64}" | base64 -d > dotenv
 
         - name: Install Flutter dependencies
-          run: flutter clean && flutter pub get 
+          run: flutter pub get 
           
         - name: Cache CocoaPods
           id: cocoapods-cache
