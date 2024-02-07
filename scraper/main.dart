@@ -9,9 +9,9 @@ void main() async {
 
   // add the header
   output +=
-      '| Package | Latest Tag | Last Updated | Melos | Link | Example | Features |\n';
+      '| Package | Latest Tag | Last Updated | Melos | UserStory | Link | Example | Features |\n';
   output +=
-      '| ------- | ---------- | ------------ | ----- | ---- | ------- | -------- |\n';
+      '| ------- | ---------- | ------------ | ----- | --------- | ---- | ------- | -------- |\n';
   var pageIndex = 1;
   var lastPageReached = false;
   List elements = [];
@@ -43,16 +43,20 @@ void main() async {
         .toString()
         .split('/Iconica-Development/')
         .last;
+    bool isUserstory = false;
 
     // Check if the repository name starts with 'flutter_' or has 'component' topic
     bool isComponent = name.startsWith('flutter_');
-    if (!isComponent) {
-      // Load the repository page to check for topics
-      if (await webScraper.loadWebPage('/Iconica-Development/$name')) {
-        var topics = webScraper.getElement('a.topic-tag.topic-tag-link', []);
+    // Load the repository page to check for topics
+    if (await webScraper.loadWebPage('/Iconica-Development/$name')) {
+      var topics = webScraper.getElement('a.topic-tag.topic-tag-link', []);
+      print(topics);
+      if (!isComponent) {
         isComponent = topics
             .any((topic) => topic['title'].toString().contains('component'));
       }
+      isUserstory = topics
+          .any((topic) => topic['title'].toString().contains('user-story'));
     }
 
     if (isComponent) {
@@ -88,11 +92,10 @@ void main() async {
                 DateTime.parse(releaseTimes.first['attributes']['datetime']))
             : '';
         output +=
-            '| $name | $highestTag | $releaseTime | ${melos ? 'Yes' : 'No'} | [code]($link) | [example]($link/tree/master/example) | ${features ? '[features]($link/tree/master/FEATURES.md)' : ''} |\n';
+            '| $name | $highestTag | $releaseTime | ${melos ? 'Yes' : 'No'} | ${isUserstory ? 'Yes' : 'No'} | [code]($link) | [example]($link/tree/master/example) | ${features ? '[features]($link/tree/master/FEATURES.md)' : ''} |\n';
       }
     }
   }
-  print(output);
 
   var file = File('../profile/README.md');
   var contents = file.readAsStringSync();
