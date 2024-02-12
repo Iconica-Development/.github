@@ -1,0 +1,22 @@
+name: Iconica Standard Component Documentation Action
+# Workflow version: 1.0.0
+
+# https://docs.github.com/en/actions/using-workflows/reusing-workflows
+on:
+    workflow_call:
+
+jobs:
+  trigger-doc-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger documentation workflow
+        env:
+            DOC_PAT: ${{ secrets.DOC_PAT_UNLIMITED }}
+        run: |
+          REPO_URL="https://github.com/${{ github.repository }}"
+          curl \
+          -X POST \
+          -H "Accept: application/vnd.github.v3+json" \
+          -H "Authorization: token $DOC_PAT" \
+          "https://api.github.com/repos/Iconica-Development/iconica_component_documentation/actions/workflows/documentation.yml/dispatches" \
+          -d "{\"ref\":\"master\",\"inputs\":{\"repository_url\":\"$REPO_URL\"}}"

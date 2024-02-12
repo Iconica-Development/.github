@@ -1,0 +1,22 @@
+{
+    "name": "Iconica Standard Component Documentation Workflow",
+    "description": "This is a basic Iconica Workflow that documents AppShell components",
+    "iconName": "octicon check-circle",
+    "version": "1.0.0",
+    "keywords": [
+        "workflow",
+        "documentation",
+        "components",
+        "AppShell"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Iconica-Development/.github.git"
+    },
+    "bugs": {
+        "url": "https://github.com/Iconica-Development/.github/issues"
+    },
+    "categories": [
+        "documentation"
+    ]
+}
