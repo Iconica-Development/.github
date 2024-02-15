@@ -48,6 +48,7 @@ void main() async {
     // Check if the repository name starts with 'flutter_' or has 'component' topic
     bool isComponent = name.startsWith('flutter_');
     // Load the repository page to check for topics
+    await Future.delayed(Duration(milliseconds: 100));
     if (await webScraper.loadWebPage('/Iconica-Development/$name')) {
       var topics = webScraper.getElement('a.topic-tag.topic-tag-link', []);
       print(topics);
@@ -96,6 +97,7 @@ void main() async {
       }
     }
   }
+  print(output);
 
   var file = File('../profile/README.md');
   var contents = file.readAsStringSync();
