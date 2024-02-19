@@ -1,101 +1,148 @@
+import 'dart:convert';
 import 'dart:io';
 
-import 'package:intl/intl.dart';
-import 'package:web_scraper/web_scraper.dart';
+import 'package:http/http.dart' as http;
+
+class GitHubRepository {
+  String name;
+  DateTime lastUpdated;
+  String latestTag;
+  String repoUrl;
+  bool hasMelosYaml;
+  bool hasUserStoryTopic;
+  String? exampleUrl;
+  String? docsUrl;
+
+  GitHubRepository({
+    required this.name,
+    required this.lastUpdated,
+    required this.latestTag,
+    required this.repoUrl,
+    this.hasMelosYaml = false,
+    this.hasUserStoryTopic = false,
+    this.exampleUrl,
+    this.docsUrl,
+  });
+
+  factory GitHubRepository.fromJson(Map<String, dynamic> json) {
+    return GitHubRepository(
+      name: json['name'],
+      lastUpdated: json['last_updated'],
+      latestTag: json['latest_tag'],
+      hasMelosYaml: json['has_melos_yaml'],
+      hasUserStoryTopic: json['has_user_story_topic'],
+      repoUrl: json['repo_url'],
+      exampleUrl: json['example_url'],
+      docsUrl: json['docs_url'],
+    );
+  }
+}
 
 void main() async {
-  final webScraper = WebScraper('https://github.com');
+  var secret = Platform.environment['DOC_PAT_UNLIMITED'] ??
+      'fallback_token'; // Replace with your own token
   var output = '';
+  var headers = {
+    'Authorization': 'token ${secret}',
+  };
+  bool isEmpty = false;
+  int page = 0;
+  List<dynamic> repositories = [];
+  List<GitHubRepository> githubRepositories = [];
 
-  // add the header
   output +=
-      '| Package | Latest Tag | Last Updated | Melos | UserStory | Link | Example | Features |\n';
+      '| Package | Latest Tag | Last Updated | Melos | UserStory | Link | Example | Docs |\n';
   output +=
-      '| ------- | ---------- | ------------ | ----- | --------- | ---- | ------- | -------- |\n';
-  var pageIndex = 1;
-  var lastPageReached = false;
-  List elements = [];
-  // first retrieve all elements
-  while (!lastPageReached) {
-    if (await webScraper.loadWebPage(
-        '/orgs/Iconica-Development/repositories?page=$pageIndex')) {
-      // add all web elements to the list
-      elements += webScraper.getElement('a.d-inline-block', ['href']);
-      // check if this is the last page
-      if (webScraper.getElement('a.next_page', ['href']).isEmpty) {
-        lastPageReached = true;
-        print('Last page reached ($pageIndex)');
-      } else {
-        print('Page $pageIndex loaded');
-        pageIndex++;
-      }
+      '| ------- | ---------- | ------------ | ----- | --------- | ---- | ------- | ---- |\n';
+
+  while (!isEmpty) {
+    page++;
+    String url =
+        'https://api.github.com/orgs/Iconica-Development/repos?type=public&page=$page&per_page=100';
+    var response = await http.get(Uri.parse(url), headers: headers);
+    if (response.statusCode != 200) {
+      print('Error: ${response.statusCode}');
+      return;
     }
+    if (json.decode(response.body).isEmpty) {
+      isEmpty = true;
+      break;
+    }
+    repositories.addAll(json.decode(response.body));
   }
-  // sort the elements by name
-  elements.sort((a, b) => a['attributes']['href'] == b['attributes']['href']
-      ? 0
-      : a['attributes']['href']
-          .toString()
-          .compareTo(b['attributes']['href'].toString()));
 
-  for (var element in elements) {
-    var name = element['attributes']['href']
-        .toString()
-        .split('/Iconica-Development/')
-        .last;
-    bool isUserstory = false;
+  for (var repo in repositories
+      .where((element) => element['name'].toString().startsWith('flutter_'))) {
+    String repoName = repo['name'];
+    String repoUrl = repo['url'];
+    String codeUrl = 'https://github.com/Iconica-Development/$repoName';
 
-    // Check if the repository name starts with 'flutter_' or has 'component' topic
-    bool isComponent = name.startsWith('flutter_');
-    // Load the repository page to check for topics
-    await Future.delayed(Duration(milliseconds: 100));
-    if (await webScraper.loadWebPage('/Iconica-Development/$name')) {
-      var topics = webScraper.getElement('a.topic-tag.topic-tag-link', []);
-      print(topics);
-      if (!isComponent) {
-        isComponent = topics
-            .any((topic) => topic['title'].toString().contains('component'));
-      }
-      isUserstory = topics
-          .any((topic) => topic['title'].toString().contains('user-story'));
+    var tagResponse =
+        await http.get(Uri.parse('$repoUrl/releases/latest'), headers: headers);
+    String latestTag = '';
+    if (tagResponse.statusCode == 200) {
+      Map<String, dynamic> tagInfo = json.decode(tagResponse.body);
+      latestTag = tagInfo['tag_name'];
     }
 
-    if (isComponent) {
-      var melos = false;
-      var features = false;
-      await Future.delayed(Duration(milliseconds: 100));
-      if (await webScraper.loadWebPage('/Iconica-Development/$name')) {
-        var elements = webScraper.getElement('a.Link--primary', ['href']);
-        for (var element in elements) {
-          if (element['title'].toString().contains('melos')) {
-            melos = true;
-          }
-          // check to see if there is a FEATURES.md file if so link to it
-          if (element['title'].toString().contains('FEATURES.md')) {
-            features = true;
-          }
-          if (melos && features) break;
+    var melosYamlResponse = await http
+        .get(Uri.parse('$repoUrl/contents/melos.yaml'), headers: headers);
+    bool hasMelosYaml = melosYamlResponse.statusCode == 200;
+
+    var topicsResponse =
+        await http.get(Uri.parse('$repoUrl/topics'), headers: headers);
+    List<dynamic> topics = json.decode(topicsResponse.body)['names'];
+    bool hasUserStoryTopic = topics.contains('user-story');
+
+    var exampleResponse = await http.get(Uri.parse('$repoUrl/contents/example'),
+        headers: headers);
+    String? exampleUrl;
+    if (exampleResponse.statusCode == 200) {
+      exampleUrl = '$repoUrl/tree/master/example';
+    } else {
+      var filesResponse =
+          await http.get(Uri.parse('$repoUrl/contents'), headers: headers);
+      List<dynamic> files = json.decode(filesResponse.body);
+      for (var file in files) {
+        if (file['name'] == 'example.dart') {
+          exampleUrl = file['html_url'];
+          break;
         }
       }
-      await Future.delayed(Duration(milliseconds: 100));
-      if (await webScraper.loadWebPage('/Iconica-Development/$name/releases')) {
-        var elements = webScraper.getElement('a.Link--primary', ['href']);
-
-        var releaseTimes =
-            webScraper.getElement('relative-time.no-wrap', ['datetime']);
-
-        var link = 'https://github.com/Iconica-Development/$name';
-        var highestTag = (elements.isNotEmpty)
-            ? elements.first['title'].toString()
-            : 'Not Released';
-        var releaseTime = releaseTimes.isNotEmpty
-            ? DateFormat("yyyy-MM-dd").format(
-                DateTime.parse(releaseTimes.first['attributes']['datetime']))
-            : '';
-        output +=
-            '| $name | $highestTag | $releaseTime | ${melos ? 'Yes' : 'No'} | ${isUserstory ? 'Yes' : 'No'} | [code]($link) | [example]($link/tree/master/example) | ${features ? '[features]($link/tree/master/FEATURES.md)' : ''} |\n';
-      }
     }
+
+    var docsUrl = '';
+    docsUrl =
+        'https://iconica-development.github.io/iconica_component_documentation/${repoName}/index.html';
+
+    var hasDocs = await http.get(Uri.parse(docsUrl), headers: headers);
+    if (hasDocs.statusCode != 200) {
+      docsUrl =
+          'https://iconica-development.github.io/iconica_component_documentation/Iconica-Development-${repoName}/index.html';
+
+      hasDocs = await http.get(Uri.parse(docsUrl), headers: headers);
+    }
+
+    githubRepositories.add(GitHubRepository(
+      name: repoName,
+      lastUpdated: await DateTime.parse(repo['updated_at']),
+      latestTag: latestTag,
+      hasMelosYaml: hasMelosYaml,
+      hasUserStoryTopic: hasUserStoryTopic,
+      repoUrl: codeUrl,
+      exampleUrl: exampleUrl,
+      docsUrl: hasDocs.statusCode == 200 ? docsUrl : null,
+    ));
+  }
+  githubRepositories.sort((a, b) => a.name.compareTo(b.name));
+  for (var repo in githubRepositories) {
+    var melos = repo.hasMelosYaml ? 'Yes' : 'No';
+    var userStory = repo.hasUserStoryTopic ? 'Yes' : 'No';
+    var exampleUrl =
+        repo.exampleUrl != null ? '[example](${repo.exampleUrl})' : '';
+    var hasDocs = repo.docsUrl != null ? '[docs](${repo.docsUrl})' : '';
+    output +=
+        '| ${repo.name} | ${repo.latestTag} | ${repo.lastUpdated.year}-${repo.lastUpdated.month}-${repo.lastUpdated.day} | ${melos} | $userStory | [code](${repo.repoUrl}) | $exampleUrl | $hasDocs |\n';
   }
   print(output);
 
