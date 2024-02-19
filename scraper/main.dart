@@ -125,7 +125,7 @@ void main() async {
 
     githubRepositories.add(GitHubRepository(
       name: repoName,
-      lastUpdated: await DateTime.parse(repo['updated_at']),
+      lastUpdated: await DateTime.parse(repo['pushed_at']),
       latestTag: latestTag,
       hasMelosYaml: hasMelosYaml,
       hasUserStoryTopic: hasUserStoryTopic,

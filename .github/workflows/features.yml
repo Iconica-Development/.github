@@ -4,27 +4,29 @@ on:
   workflow_dispatch:
 
 jobs:
-    readmeupdate:
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
-        permissions:
-            contents: write
-        steps:
-            - uses: actions/checkout@v4
-            - name: Setup Dart
-              uses: dart-lang/setup-dart@v1
-            - name: Install dependencies
-              run: dart pub get --directory=scraper
-            - name: Update FEATURES.md
-              run: |
-                cd scraper
-                dart features.dart
-            - uses: stefanzweifel/git-auto-commit-action@v4
-              env:
-                    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              with:
-                    commit_message: "feat: update FEATURES.md"
-                    branch: master
-                    commit_user_name: Github Actions Bot
-                    commit_user_email: actions@github.com
-                    commit_author: Author <actions@github.com>
+  readmeupdate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+      - name: Install dependencies
+        run: dart pub get --directory=scraper
+      - name: Update FEATURES.md
+        env:
+          DOC_PAT_UNLIMITED: ${{ secrets.DOC_PAT_UNLIMITED }}
+        run: |
+          cd scraper
+          dart features.dart
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          commit_message: "feat: update FEATURES.md"
+          branch: master
+          commit_user_name: Github Actions Bot
+          commit_user_email: actions@github.com
+          commit_author: Author <actions@github.com>

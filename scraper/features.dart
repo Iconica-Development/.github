@@ -1,163 +1,103 @@
+import 'dart:convert';
 import 'dart:io';
 
-import 'package:web_scraper/web_scraper.dart';
+import 'package:http/http.dart' as http;
+
+class GitHubRepository {
+  String name;
+  String description;
+  String link;
+  String? gif;
+  String? image;
+  String? figmaDesign;
+  String? figmaPrototype;
+
+  GitHubRepository({
+    required this.name,
+    required this.description,
+    required this.link,
+    this.gif,
+    this.image,
+    this.figmaDesign,
+    this.figmaPrototype,
+  });
+}
 
 void main() async {
-  var webScraper = WebScraper('https://github.com');
+  var secret = Platform.environment['DOC_PAT_UNLIMITED'] ??
+      'fallback_token'; // Replace with your own token
   var output = '';
+  var headers = {
+    'Authorization': 'token ${secret}',
+  };
+  bool isEmpty = false;
+  int page = 0;
+  List<dynamic> repositories = [];
+  List<GitHubRepository> githubRepositories = [];
 
   // add the header
   output +=
-      '| Package | Description | Link | Gif | Image | Figma Design | Clickable prototype|\n';
+      '| Package | Description | Link | Gif | Image | Figma Design | Clickable prototype |\n';
   output +=
       '| ------- | ----------- | ---- | --- | ----- | ------------ | ------------------ |\n';
-  var pageIndex = 1;
-  var lastPageReached = false;
-  List elements = [];
-  // first retrieve all elements
-  while (!lastPageReached) {
-    if (await webScraper.loadWebPage(
-      '/orgs/Iconica-Development/repositories?page=$pageIndex',
-    )) {
-      // add all web elements to the list
-      elements += webScraper.getElement('a.d-inline-block', ['href']);
-      // check if this is the last page
-      if (webScraper.getElement('a.next_page', ['href']).isEmpty) {
-        lastPageReached = true;
-      } else {
-        pageIndex++;
-      }
+
+  while (!isEmpty) {
+    page++;
+    String url =
+        'https://api.github.com/orgs/Iconica-Development/repos?page=$page&per_page=100';
+    var response = await http.get(Uri.parse(url), headers: headers);
+    if (response.statusCode != 200) {
+      print('Error: ${response.statusCode}');
+      return;
     }
+    if (json.decode(response.body).isEmpty) {
+      isEmpty = true;
+      break;
+    }
+    repositories.addAll(json.decode(response.body));
   }
-  // sort the elements by name
-  elements.sort((a, b) => a['attributes']['href'] == b['attributes']['href']
-      ? 0
-      : a['attributes']['href']
-          .toString()
-          .compareTo(b['attributes']['href'].toString()));
 
-  for (var element in elements) {
-    var name = element['attributes']['href']
-        .toString()
-        .split('/Iconica-Development/')
-        .last;
+  for (var repo in repositories
+      .where((element) => element['name'].toString().startsWith('flutter_'))) {
+    String repoName = repo['name'];
+    String link = repo['html_url'];
+    var gifUrl = await _getGifUrlInRepo(repoName, headers);
+    var imageUrl = await _getImagePathsInRepo(repoName, headers);
+    var description = await _getDescriptionOfRepo(repoName, headers);
+    var figmaProtoLink = await _checkFigmaProtoLinkInReadme(repoName, headers);
+    var figmaDesignLink = await _checkFigmaLinkInReadme(repoName, headers);
 
-    // Check if the repository name starts with 'flutter_' or has 'component' topic
-    bool isComponent = name.startsWith('flutter_');
-    if (!isComponent) {
-      // Load the repository page to check for topics
-      if (await webScraper.loadWebPage('/Iconica-Development/$name')) {
-        var topics = webScraper.getElement('a.topic-tag.topic-tag-link', []);
-        isComponent = topics
-            .any((topic) => topic['title'].toString().contains('component'));
-      }
-    }
-
-    if (isComponent) {
-      await Future.delayed(Duration(milliseconds: 200));
-
-      var pageLink = 'https://github.com/Iconica-Development/$name';
-      var figmaDesignLink = '';
-      var clickablePrototypeLink = '';
-      // check the master branch to search for .gif files
-      if (await webScraper.loadWebPage('/Iconica-Development/$name')) {
-        var images = <String>[];
-        var gifs = <String>[];
-        var descriptionElement = webScraper.getElement('p.f4%20my-3', []);
-
-        // strip leading and ending whitespace from the string
-        var description = (descriptionElement.isNotEmpty)
-            ? descriptionElement.first['title'].toString().trim()
-            : 'No description';
-        var fileLinks = webScraper.getElement('a.Link--primary', ['href']);
-        for (var fileLink in fileLinks) {
-          var href = fileLink['attributes']['href'].toString();
-
-          (switch (href) {
-            (String a) when a.endsWith('.gif') => gifs,
-            // check for jpg, jpeg, png, svg
-            (String a) when a.endsWith('.jpg') => images,
-            (String a) when a.endsWith('.jpeg') => images,
-            (String a) when a.endsWith('.png') => images,
-            (String a) when a.endsWith('.svg') => images,
-            _ => [],
-          })
-              .add('https://github.com$href');
-        }
-
-        await Future.delayed(Duration(milliseconds: 100));
-        // look in the readme.md file for a gif or mp4 reference
-        if (await webScraper
-            .loadWebPage('/Iconica-Development/$name/blob/master/README.md')) {
-          var readmeContent = webScraper.getPageContent();
-          var figmaLinkRegex = RegExp(r'https://[www.]*figma.com/[^)\s]*');
-          var figmaLinks = figmaLinkRegex.allMatches(readmeContent);
-
-          // get the first link that contains proto and file
-          if (figmaLinks.isNotEmpty) {
-            print(figmaLinks.first.group(0).toString());
-
-            if (figmaLinks.any(
-                (element) => element.group(0).toString().contains('/proto/'))) {
-              print('found clickable prototype');
-              clickablePrototypeLink = figmaLinks
-                  .firstWhere((element) =>
-                      element.group(0).toString().contains('/proto/'))
-                  .group(0)
-                  .toString();
-            } else if (figmaLinks.any(
-                (element) => element.group(0).toString().contains('/file/'))) {
-              print('found figma design');
-              figmaDesignLink = figmaLinks
-                  .firstWhere((element) =>
-                      element.group(0).toString().contains('/file/'))
-                  .group(0)
-                  .toString();
-            }
-          }
-          var imageElements = webScraper.getElement('img', ['src']);
-          for (var element in imageElements) {
-            var src = element['attributes']['src'].toString();
-            // check if src contains twitter
-            // TODO(freek): filter out the images that are not in the readme.md file
-            if (!src.contains('githubassets') || src.contains('Iconica')) {
-              (switch (src) {
-                (String a) when a.endsWith('.gif') => gifs,
-                // check for jpg, jpeg, png, svg
-                (String a) when a.endsWith('.jpg') => images,
-                (String a) when a.endsWith('.jpeg') => images,
-                (String a) when a.endsWith('.png') => images,
-                (String a) when a.endsWith('.svg') => images,
-                _ => <String>[],
-              })
-                  .add(src.startsWith('https://')
-                      ? src
-                      : 'https://github.com$src');
-            }
-          }
-        }
-        if (gifs.isNotEmpty || images.isNotEmpty) {
-          // combine all the links into one string
-          var chosenGif = gifs.isNotEmpty
-              ? '![Example GIF of package](${gifs.first})'
-              : ' no gif ';
-          var chosenImage = images.isNotEmpty
-              ? '![Example Image of package](${images.first})'
-              : ' no image';
-          // only show the figma link if it is not empty
-          var figmaDesign = figmaDesignLink.isNotEmpty
-              ? '[Figma Design]($figmaDesignLink)'
-              : '';
-          var clickablePrototype = clickablePrototypeLink.isNotEmpty
-              ? '[Clickable Prototype]($clickablePrototypeLink)'
-              : '';
-          output +=
-              '| $name | $description | [code]($pageLink) | $chosenGif | $chosenImage | $figmaDesign | $clickablePrototype |\n';
-        }
-      }
-    }
+    githubRepositories.add(GitHubRepository(
+      name: repoName,
+      description: description,
+      link: link,
+      gif: gifUrl,
+      image: imageUrl,
+      figmaDesign: figmaDesignLink,
+      figmaPrototype: figmaProtoLink,
+    ));
   }
-  print(output);
+  githubRepositories.sort((a, b) => a.name.compareTo(b.name));
+
+  for (var repo in githubRepositories) {
+    if (repo.gif == null && repo.image == null) {
+      return;
+    }
+    var gif =
+        repo.gif == null ? 'No gif' : '![Example GIF of package](${repo.gif})';
+    var image = repo.image == null
+        ? 'No image'
+        : '![Example Image of package](${repo.image})';
+    var figmaDesign = repo.figmaDesign == null
+        ? 'No Figma Design'
+        : '[Figma Design](${repo.figmaDesign})';
+    var figmaPrototype = repo.figmaPrototype == null
+        ? 'No Clickable Prototype'
+        : '[Clickable Prototype](${repo.figmaPrototype})';
+
+    output +=
+        '| ${repo.name} | ${repo.description} | [code](${repo.link}) | $gif | $image | $figmaDesign | $figmaPrototype |\n';
+  }
 
   var file = File('../profile/FEATURES.md');
   var contents = file.readAsStringSync();
@@ -165,4 +105,105 @@ void main() async {
   output = contents + 'List of Flutter Packages\n\n' + output;
 
   File('../profile/FEATURES.md').writeAsStringSync(output);
+}
+
+Future<String?> _getGifUrlInRepo(
+    String repoName, Map<String, String> headers) async {
+  var apiUrl =
+      'https://api.github.com/repos/Iconica-Development/$repoName/contents';
+  var response = await http.get(Uri.parse(apiUrl), headers: headers);
+
+  if (response.statusCode == 200) {
+    List<dynamic> contents = json.decode(response.body);
+
+    for (var content in contents) {
+      var name = content['name'];
+      if (name.endsWith('.gif')) {
+        return content['html_url'];
+      }
+    }
+  } else {
+    print('Failed to load contents of $repoName: ${response.reasonPhrase}');
+  }
+  return null;
+}
+
+Future<String?> _getImagePathsInRepo(
+    String repoName, Map<String, String> headers) async {
+  var apiUrl =
+      'https://api.github.com/repos/Iconica-Development/$repoName/contents';
+  var response = await http.get(Uri.parse(apiUrl), headers: headers);
+  var imageExtensions = ['.jpg', '.jpeg', '.png', '.svg'];
+
+  if (response.statusCode == 200) {
+    List<dynamic> contents = json.decode(response.body);
+
+    for (var content in contents) {
+      var name = content['name'];
+      if (imageExtensions
+          .any((extension) => name.toLowerCase().endsWith(extension))) {
+        return content['html_url'];
+      }
+    }
+  } else {
+    print('Failed to load contents of $repoName: ${response.reasonPhrase}');
+  }
+  return null;
+}
+
+Future<String> _getDescriptionOfRepo(
+    String repoName, Map<String, String> headers) async {
+  var apiUrl = 'https://api.github.com/repos/Iconica-Development/$repoName';
+  var response = await http.get(Uri.parse(apiUrl), headers: headers);
+
+  if (response.statusCode == 200) {
+    var repoDetails = json.decode(response.body);
+    return repoDetails['description'] ?? 'No description';
+  } else {
+    print(
+        'Failed to load repository details for $repoName: ${response.reasonPhrase}');
+    return 'No description';
+  }
+}
+
+Future<String?> _checkFigmaProtoLinkInReadme(
+    String repoName, Map<String, String> headers) async {
+  var apiUrl =
+      'https://api.github.com/repos/Iconica-Development/$repoName/contents/README.md';
+  var response = await http.get(Uri.parse(apiUrl), headers: headers);
+
+  if (response.statusCode == 200) {
+    var readmeDownloadUrl = json.decode(response.body)['download_url'];
+    var readme = await http.get(Uri.parse(readmeDownloadUrl), headers: headers);
+
+    var figmaProtoLinkRegex = RegExp(r'https://www\.figma\.com/proto[^)\s]*');
+    var matches = figmaProtoLinkRegex.allMatches(readme.body);
+    if (matches.isNotEmpty) {
+      return matches.first.group(0);
+    }
+  } else {
+    print('Failed to load README.md for $repoName: ${response.reasonPhrase}');
+  }
+  return null;
+}
+
+Future<String?> _checkFigmaLinkInReadme(
+    String repoName, Map<String, String> headers) async {
+  var apiUrl =
+      'https://api.github.com/repos/Iconica-Development/$repoName/contents/README.md';
+  var response = await http.get(Uri.parse(apiUrl), headers: headers);
+
+  if (response.statusCode == 200) {
+    var readmeDownloadUrl = json.decode(response.body)['download_url'];
+    var readme = await http.get(Uri.parse(readmeDownloadUrl), headers: headers);
+
+    var figmaLinkRegex = RegExp(r'https://www\.figma\.com/(?!proto)[^)\s]*');
+    var matches = figmaLinkRegex.allMatches(readme.body);
+    if (matches.isNotEmpty) {
+      return matches.first.group(0);
+    }
+  } else {
+    print('Failed to load README.md for $repoName: ${response.reasonPhrase}');
+  }
+  return null;
 }
