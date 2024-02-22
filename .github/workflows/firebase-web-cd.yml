@@ -68,7 +68,7 @@ jobs:
                 flutter build web --release --no-tree-shake-icons
             - name: Determine channel name
               id: channel_name
-              run: echo "CHANNEL_NAME=$(echo '${{ github.event.pull_request.title || github.run_id }}' | sed 's/[^a-zA-Z0-9]/-/g')" >> $GITHUB_ENV
+              run: echo "CHANNEL_NAME=$(echo '${{ github.event.pull_request.title || github.run_id }}' | sed "s/[^a-zA-Z0-9']/-/g")" >> $GITHUB_ENV
             - name: Set Deploy Command
               id: deploy-command
               run: echo "DEPLOY_COMMAND=$(if ${{ inputs.use_preview_channel }}; then echo \"${CHANNEL_NAME}\"; else echo 'live'; fi)" >> $GITHUB_ENV
