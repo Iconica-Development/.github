@@ -22,7 +22,11 @@ on:
         description: 'Optional tester groups that will be notified about the new release. Enter a single group or multiple groups as a comma seperated list'
         required: false
         default: ''
-
+      additional_commands:
+        type: string
+        description: "Additional commands to be run after flutter pub get"
+        required: false
+        default: ""
 env:
   ANDROID_APP: ${{ vars.ANDROID_APP }}
   DOTENV_BASE64: ${{ secrets[inputs.dotenv_override || 'DOTENV_BASE64'] }}
@@ -64,9 +68,13 @@ jobs:
             - name: Create dotenv file from GitHub Secrets
               run: echo -n "${DOTENV_BASE64}" | base64 -d > dotenv  
 
+            - name: Run additional commands
+              if: inputs.additional_commands != ''
+              run: |
+                  ${{ inputs.additional_commands }}
+
             - name: Build apk
               run: |
-                flutter clean
                 flutter build apk --release --no-tree-shake-icons
 
             - name: Distribute to firebase
