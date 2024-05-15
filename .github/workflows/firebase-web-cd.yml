@@ -1,6 +1,6 @@
-name: Iconica Standard App CI Action
+name: Build and Deploy Web app to Firebase hosting
 
-# Workflow version: 5.0.0
+# Workflow version: 6.0.0
 
 # https://docs.github.com/en/actions/using-workflows/reusing-workflows
 on:
@@ -33,6 +33,10 @@ on:
         description: "Optional dotenv Override"
         required: false
         type: string
+      flutter_version:
+        description: "Optional Flutter Version"
+        required: false
+        type: string
 
 env:
   PROJECT_ID: ${{ vars.PROJECT_ID }}
@@ -48,7 +52,17 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
+      - name: Flutter install specific version
+        if: inputs.flutter_version != ''
+        uses: subosito/flutter-action@v2
+        with:
+          channel: "stable"
+          cache: true
+          cache-key: ${{ runner.OS }}-flutter-install-cache
+          flutter-version: ${{ inputs.flutter_version }}
+      - name: Flutter install stable version
+        if: inputs.flutter_version == ''
+        uses: subosito/flutter-action@v2
         with:
           channel: "stable"
           cache: true

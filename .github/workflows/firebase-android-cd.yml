@@ -27,6 +27,10 @@ on:
         description: "Additional commands to be run after flutter pub get"
         required: false
         default: ""
+      flutter_version:
+        description: "Optional Flutter Version"
+        required: false
+        type: string
 env:
   ANDROID_APP: ${{ vars.ANDROID_APP }}
   DOTENV_BASE64: ${{ secrets[inputs.dotenv_override || 'DOTENV_BASE64'] }}
@@ -46,10 +50,19 @@ jobs:
             - name: Checkout repository
               uses: actions/checkout@v4
 
-            - name: Install Flutter
+            - name: Flutter install specific version
+              if: inputs.flutter_version != ''
               uses: subosito/flutter-action@v2
               with:
-                channel: 'stable'
+                channel: "stable"
+                cache: true
+                cache-key: ${{ runner.OS }}-flutter-install-cache
+                flutter-version: ${{ inputs.flutter_version }}
+            - name: Flutter install stable version
+              if: inputs.flutter_version == ''
+              uses: subosito/flutter-action@v2
+              with:
+                channel: "stable"
                 cache: true
                 cache-key: ${{ runner.OS }}-flutter-install-cache
 

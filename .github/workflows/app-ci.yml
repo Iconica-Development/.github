@@ -15,7 +15,10 @@ on:
           description: 'Additional commands to be run after flutter pub get'
           required: false
           default: ''
-
+        flutter_version:
+          description: "Optional Flutter Version"
+          required: false
+          type: string
 env:
     DOTENV_BASE64: ${{ secrets.DOTENV_BASE64 }}
 
@@ -28,9 +31,19 @@ jobs:
         timeout-minutes: 10
         steps:
             - uses: actions/checkout@v4
-            - uses: subosito/flutter-action@v2
+            - name: Flutter install specific version
+              if: inputs.flutter_version != ''
+              uses: subosito/flutter-action@v2
               with:
-                channel: 'stable'
+                channel: "stable"
+                cache: true
+                cache-key: ${{ runner.OS }}-flutter-install-cache
+                flutter-version: ${{ inputs.flutter_version }}
+            - name: Flutter install stable version
+              if: inputs.flutter_version == ''
+              uses: subosito/flutter-action@v2
+              with:
+                channel: "stable"
                 cache: true
                 cache-key: ${{ runner.OS }}-flutter-install-cache
             - name: Run additional commands
