@@ -1,5 +1,5 @@
 name: Iconica Standard Melos CI Action
-# Workflow version: 1.0.0
+# Workflow version: 2.0.0
 
 # https://docs.github.com/en/actions/using-workflows/reusing-workflows
 on:
@@ -66,4 +66,5 @@ jobs:
                 DOTENV_BASE64: ${{ env.DOTENV_BASE64 }}
             - name: Run Melos CI
               run: |
+                dart run melos bootstrap
                 dart run melos run lint:all
