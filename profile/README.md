@@ -31,6 +31,7 @@ Each Starter Workflow calls a workflow inside this repository so Workflows can b
 | firebase-web-cd | 6.0.0 | [firebase-web-cd.yml](./workflow-templates/firebase-web-cd.yml) | This workflow runs a Flutter build for web and deploys it to Firebase Hosting (on pull requests and pushes to master). Configuring this action is done through ```firebase init hosting:github``` |
 app-firebase-cd | 1.0.0 | [app-firebase-cd.yml](./workflow-templates/app-firebase-cd.yml) | This workflow gives the user the option to build Flutter apps for both Android and iOS (on dispatch) and distribute the builds to Firebase. Before using this workflow, the repository implementing it requires some configuration. This is necessary to sign the iOS app. The configuration steps can be found in [this manual](./.github/workflows/manuals/firebase-ios-cd.md). | 
 component-documentation | 1.0.0 | [component-documentation.yml](./workflow-templates/component-documentation.yml) | This Workflow runs a action that triggers the component documentation te be updated. |
+component-release | 1.0.0 | [component-release.yml](./workflow-templates/component-release.yml) | This Workflow runs a action that triggers the component to be released which includes publishing. |
 
 ## List of Flutter Packages
 
