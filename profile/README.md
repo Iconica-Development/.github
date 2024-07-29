@@ -3,7 +3,7 @@
 
 Welcome to our github repository!
 
-Before contributing make sure you have read the [contribution guide](./profile/CONTRIBUTING.md)
+Before contributing make sure you have read the [contribution guide](./CONTRIBUTING.md)
 Also when adding a repository make sure to add a README in accordance with the README_TEMPLATE
 
 ## Issues
@@ -12,7 +12,7 @@ Please file any issues, bugs or feature request as an issue on our repository. C
 
 ## Want to contribute
 
-If you would like to contribute to a package (e.g. by improving the documentation, solving a bug or adding a cool new feature), please carefully review our [contribution guide](./profile/CONTRIBUTING.md) and send us a pull request.
+If you would like to contribute to a package (e.g. by improving the documentation, solving a bug or adding a cool new feature), please carefully review our [contribution guide](./CONTRIBUTING.md) and send us a pull request.
 
 ## Author
 
@@ -38,7 +38,7 @@ This list contains all the repositories that contain components. When a package 
 
 Click [here](https://github.com/Iconica-Development/.github/actions/workflows/release.yml) to run the Github Action updating this list.
 
-A list of all the Gifs of the packages can be found [here](./profile/FEATURES.md)
+A list of all the Gifs of the packages can be found [here](./FEATURES.md)
 
 | Package | Latest Tag | Last Updated | Melos | UserStory | Link | Example | Docs |
 | ------- | ---------- | ------------ | ----- | --------- | ---- | ------- | ---- |
