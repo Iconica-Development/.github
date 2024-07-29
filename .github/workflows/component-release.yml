@@ -1,0 +1,30 @@
+name: Iconica Standard Component Release Action
+# Workflow version: 1.0.0
+
+# https://docs.github.com/en/actions/using-workflows/reusing-workflows
+on:
+    workflow_call:
+
+jobs:
+    publish:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+            - name: Setup Flutter
+              uses: subosito/flutter-action@v2
+              with:
+                channel: "stable"
+                cache: true
+                cache-key: ${{ runner.OS }}-flutter-install-cache
+            - name: Install dependencies
+              run: flutter pub get
+            - name: Add pub server credentials
+              env:
+                PUB_TOKEN: ${{ secrets.PUB_TOKEN }}
+                PUB_SERVER_URL: ${{ vars.PUB_SERVER_URL }}
+              run: |
+                dart pub token add --env-var PUB_TOKEN $PUB_SERVER_URL
+            - name: Publish to private pub server
+              run: flutter pub publish --force
+          
