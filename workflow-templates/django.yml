@@ -1,0 +1,16 @@
+name: "Iconica Standard Django CI Workflow"
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  global:
+    uses: "Iconica-Development/.github/.github/workflows/django.yml@master"
+    secrets: "inherit"
+    permissions: "write-all"
+    with:
+      python_version: "3.11"
+      poetry_version: "1.5.0"
+      django_settings_module: "" # A valid Django settings module
+
