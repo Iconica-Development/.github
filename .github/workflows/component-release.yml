@@ -1,7 +1,6 @@
 name: Iconica Standard Component Release Action
-# Workflow version: 1.0.0
+# Workflow version: 2.0.0
 
-# https://docs.github.com/en/actions/using-workflows/reusing-workflows
 on:
     workflow_call:
 
@@ -11,21 +10,45 @@ jobs:
         steps:
             - name: Checkout
               uses: actions/checkout@v4
+
             - name: Setup Flutter
               uses: subosito/flutter-action@v2
               with:
                 channel: "stable"
                 cache: true
                 cache-key: ${{ runner.OS }}-flutter-install-cache
-            - name: Install dependencies
-              run: flutter pub get
+
+            - name: Check for melos.yaml
+              id: melos-check
+              run: |
+                if [ -f melos.yaml ]; then
+                  echo "::set-output name=melos::true"
+                else
+                  echo "::set-output name=melos::false"
+                fi
+
+            - name: Install Melos (if Melos project)
+              if: steps.melos-check.outputs.melos == 'true'
+              run: dart pub global activate melos
+
+            - name: Bootstrap Melos (if Melos project)
+              if: steps.melos-check.outputs.melos == 'true'
+              run: melos bootstrap
+
             - name: Add pub server credentials
               env:
                 PUB_SERVER_URL: ${{ vars.PUB_SERVER_URL }}
               run: |
                 dart pub token add --env-var PUB_TOKEN $PUB_SERVER_URL
-            - name: Publish to private pub server
+
+            - name: Publish packages for Melos project
+              if: steps.melos-check.outputs.melos == 'true'
+              env:
+                PUB_TOKEN: ${{ secrets.PUB_TOKEN }}
+              run: |
+                melos exec -c 1 -- flutter pub publish --force || echo 'Skipping failed publish'
+            - name: Publish single package for non-Melos project
+              if: steps.melos-check.outputs.melos == 'false'
               run: flutter pub publish --force
               env:
                 PUB_TOKEN: ${{ secrets.PUB_TOKEN }}
-          
