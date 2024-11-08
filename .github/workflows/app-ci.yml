@@ -1,5 +1,5 @@
 name: Iconica Standard App CI Action
-# Workflow version: 3.0.0
+# Workflow version: 4.0.0
 
 # https://docs.github.com/en/actions/using-workflows/reusing-workflows
 on:
@@ -19,6 +19,12 @@ on:
           description: "Optional Flutter Version"
           required: false
           type: string
+        use_test_assets:
+          type: boolean
+          description: 'Use test assets in Flutter tests'
+          required: false
+          default: false
+
 env:
     DOTENV_BASE64: ${{ secrets.DOTENV_BASE64 }}
 
@@ -68,4 +74,9 @@ jobs:
             - name: Flutter analyze
               run: flutter analyze
             - name: Flutter test
-              run: flutter test --coverage --reporter github --no-test-assets --exclude-tags integration
+              run: |
+                if ${{ inputs.use_test_assets }}; then
+                  flutter test --coverage --reporter github --exclude-tags integration
+                else
+                  flutter test --coverage --reporter github --no-test-assets --exclude-tags integration
+                fi

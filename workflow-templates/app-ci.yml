@@ -1,5 +1,5 @@
 name: Iconica Standard App CI Workflow
-# Workflow Caller version: 2.0.0
+# Workflow Caller version: 3.0.0
 
 on:
   pull_request:
@@ -12,3 +12,4 @@ jobs:
     permissions: write-all
     with:
       subfolder: '.' # add optional subfolder to run workflow in
+      use_test_assets: false # add optional flag to use test assets in Flutter tests, This is needed for widget tests

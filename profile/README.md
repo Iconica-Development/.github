@@ -24,7 +24,7 @@ Each Starter Workflow calls a workflow inside this repository so Workflows can b
 
 | Name | Version | Link | Usage |
 | ---- | ------- | ---- | ----- |
-| app-ci | 2.0.0 | [app-ci.yml](../workflow-templates/app-ci.yml) | This Workflow runs the standard steps for Iconica Apps before approval can be given on a Pull Request |
+| app-ci | 3.0.0 | [app-ci.yml](../workflow-templates/app-ci.yml) | This Workflow runs the standard steps for Iconica Apps before approval can be given on a Pull Request |
 | component-ci | 2.0.0 | [component-ci.yml](../workflow-templates/component-ci.yml) | This Workflow runs the standard steps for Iconica Components before approval can be given on a Pull Request |
 | melos-ci | 1.0.0 | [melos-ci.yml](../workflow-templates/melos-ci.yml) | This Workflow runs the standard steps for Iconica Melos Packages before approval can be given on a Pull Request |
 | django | 1.0.0 | [django.yml](../workflow-templates/django.yml) | This Workflow runs the standard steps for Iconica Django Projects before approval can be given on a Pull Request |
