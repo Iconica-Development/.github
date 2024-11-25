@@ -15,6 +15,10 @@ on:
         type: "string"
         description: "Version of Poetry to use when installing dependencies"
         required: true
+      ruff_version:
+        type: "string"
+        description: "Version of Ruff to use when linting"
+        required: true
       django_settings_module:
         type: "string"
         description: "The Django settings module to use"
@@ -31,6 +35,8 @@ jobs:
     steps:
       - uses: "actions/checkout@v4"
       - uses: "chartboost/ruff-action@v1"
+        with:
+          version: "${{ inputs.ruff_version }}"
 
   test:
     runs-on: "ubuntu-latest"
