@@ -1,0 +1,34 @@
+name: Iconica Flutter Fastlane Firebase Distribution Workflow
+# Workflow Caller version: 1.0.0
+
+on:
+  push:
+    tags:
+      - '*'
+  workflow_dispatch:
+    inputs:
+      run_android:
+        description: 'Run Android'
+        required: false
+        default: true
+        type: boolean
+      run_ios:
+        description: 'Run iOS'
+        required: false
+        default: true
+        type: boolean
+      custom_dotenv_secret:
+        description: 'Custom dotenv secret name'
+        required: false
+        type: string
+
+jobs:
+  call-global-iconica-workflow:
+    uses: Iconica-Development/.github/.github/workflows/firebase-fastlane-cd.yml@master
+    secrets: inherit
+    permissions: write-all
+    with:
+      run_android: ${{ github.event.inputs.run_android == 'true' }}
+      run_ios: ${{ github.event.inputs.run_ios == 'true' }}
+      subfolder: '.'
+      
