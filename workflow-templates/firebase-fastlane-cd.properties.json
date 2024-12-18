@@ -1,0 +1,10 @@
+{
+    "name": "Iconica Flutter Fastlane Firebase App Distribution Workflow",
+    "description": "This Github Action can automatically deploy your Flutter app to Firebase App Distribution. The following secrets need to be configured: FIREBASE_SERVICE_ACCOUNT and DOTENV_BASE64.",
+    "iconName": "octicon rocket",
+    "categories": [
+        "deployment",
+        "testing",
+        "code-review"
+    ]
+}
