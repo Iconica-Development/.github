@@ -1,0 +1,204 @@
+name: Reusable Firebase Fastlane CD Workflow
+# Workflow version: 1.0.0
+
+on:
+  workflow_call:
+    inputs:
+      service_account_secret_name:
+        description: "The name of the GitHub secret containing the Firebase service account key"
+        required: false
+        type: string
+      apple_provisioning_service_key:
+        description: "The name of the GitHub secret containing the Storage Service account key needed for the Apple provisioning with Match"
+        required: false
+        type: string
+      apple_provisioning_password_key:
+        description: "The name of the GitHub secret containing the password for the Apple provisioning with Match"
+        required: false
+        type: string
+      dotenv_override:
+        description: 'Optional dotenv Override'
+        required: false
+        type: string
+      flutter_version:
+        description: "Optional Flutter Version"
+        required: false
+        type: string
+      subfolder:
+        type: string
+        description: 'Subfolder where the Flutter project is located'
+        required: false
+        default: '.'
+      run_android:
+        description: "Set to true to enable Android build"
+        required: false
+        default: true
+        type: boolean
+      run_ios:
+        description: "Set to true to enable iOS build"
+        required: false
+        default: true
+        type: boolean
+      extra_environment_variable1_key:
+        description: 'Optional extra environment variable 1 key, this is the ENV key'
+        required: false
+        type: string
+      extra_environment_variable1_value:
+        description: 'Optional extra environment variable 1 value, this should be the key of a GitHub secret'
+        required: false
+        type: string
+      extra_environment_variable2_key:
+        description: 'Optional extra environment variable 2 key, this is the ENV key'
+        required: false
+        type: string
+      extra_environment_variable2_value:
+        description: 'Optional extra environment variable 2 value, this should be the key of a GitHub secret'
+        required: false
+        type: string
+
+env:
+    # These 2 environment variables allow for extra functionality inside the Fastlane file without having a reference to that functionality in this workflow
+    ${{ inputs.extra_environment_variable1_key || 'EXTRA_ENVIRONMENT_VARIABLE_1' }}: ${{ secrets[inputs.extra_environment_variable1_value || ''] }}
+    ${{ inputs.extra_environment_variable2_key || 'EXTRA_ENVIRONMENT_VARIABLE_2' }}: ${{ secrets[inputs.extra_environment_variable2_value || ''] }}
+    DOTENV_BASE64: ${{ secrets[inputs.dotenv_override || 'DOTENV_BASE64'] }}
+    FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets[inputs.service_account_secret_name || 'FIREBASE_SERVICE_ACCOUNT'] }}
+    STORAGE_SERVICE_ACCOUNT_JSON: ${{ secrets[inputs.apple_provisioning_service_key || 'GOOGLE_CLOUD_STORAGE_SERVICE_ACCOUNT'] }}
+    MATCH_PASSWORD: ${{ secrets[inputs.apple_provisioning_password_key || 'MATCH_PASSWORD'] }}
+
+jobs:
+  android-distribute:
+    name: Build and Distribute Android
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: ${{ inputs.run_android }}
+    defaults:
+        run:
+          working-directory: ${{ inputs.subfolder }}
+    env:
+      LC_ALL: en_US.UTF-8
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Flutter install specific version
+        if: inputs.flutter_version != ''
+        uses: subosito/flutter-action@v2
+        with:
+          channel: "stable"
+          cache: true
+          cache-key: ${{ runner.OS }}-flutter-install-cache
+          flutter-version: ${{ inputs.flutter_version }}
+      - name: Flutter install stable version
+        if: inputs.flutter_version == ''
+        uses: subosito/flutter-action@v2
+        with:
+          channel: "stable"
+          cache: true
+          cache-key: ${{ runner.OS }}-flutter-install-cache
+ 
+      - name: Set up Ruby and Fastlane
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.1
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Create dotenv file from GitHub Secrets
+        env:
+          DOTENV_BASE64: ${{ env.DOTENV_BASE64 }}
+        run: echo -n "${DOTENV_BASE64}" | base64 -d > dotenv  
+
+      - name: Save Firebase Service Account JSON
+        run: echo "$FIREBASE_SERVICE_ACCOUNT_JSON" | base64 --decode > android/service_account.json
+
+      - name: Install Fastlane
+        run: gem install fastlane
+  
+      - name: Install Flutter dependencies
+        run: flutter pub get
+
+      - name: Run tests
+        run: flutter test
+
+      - name: Run Fastlane for Android
+        working-directory: android
+        run: fastlane firebase_distribution --verbose
+
+  ios-distribute:
+    name: Build and Distribute Ios
+    runs-on: macos-15
+    if: inputs.run_ios
+    timeout-minutes: 30
+    defaults:
+        run:
+          working-directory: ${{ inputs.subfolder }}
+    env:
+      LC_ALL: en_US.UTF-8
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Print Xcode version
+        run: xcodebuild -version
+
+      - name: Flutter install specific version
+        if: inputs.flutter_version != ''
+        uses: subosito/flutter-action@v2
+        with:
+          channel: "stable"
+          cache: true
+          cache-key: ${{ runner.OS }}-flutter-install-cache
+          flutter-version: ${{ inputs.flutter_version }}
+      - name: Flutter install stable version
+        if: inputs.flutter_version == ''
+        uses: subosito/flutter-action@v2
+        with:
+          channel: "stable"
+          cache: true
+          cache-key: ${{ runner.OS }}-flutter-install-cache
+ 
+      - name: Set up Ruby and Fastlane
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.1
+
+      - name: Create dotenv file from GitHub Secrets
+        run: echo -n "${DOTENV_BASE64}" | base64 -d > dotenv  
+
+      - name: Save Firebase Service Account JSON
+        run: echo "$FIREBASE_SERVICE_ACCOUNT_JSON" | base64 --decode > ios/service_account.json
+      
+      - name: Save Provision Profile Storage Service Account JSON
+        run: echo "$STORAGE_SERVICE_ACCOUNT_JSON" | base64 --decode > ios/storage_keys.json
+
+      - name: Install Fastlane
+        run: gem install fastlane
+  
+      - name: Install Flutter dependencies
+        run: flutter pub get
+
+      - name: Run tests
+        run: flutter test
+
+      - name: Install CocoaPods
+        run: |
+          cd ios
+          pod install
+
+      - name: Run Fastlane for Ios
+        working-directory: ios
+        run: fastlane firebase_distribution --verbose
