@@ -1,6 +1,6 @@
 name: "Iconica Standard Django CI Action"
 
-# Workflow version: 1.0.0
+# Workflow version: 2.0.0
 
 # https://docs.github.com/en/actions/using-workflows/reusing-workflows
 
@@ -55,7 +55,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: "actions/checkout@v4"
       - uses: "actions/setup-python@v5"
