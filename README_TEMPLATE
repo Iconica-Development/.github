@@ -4,7 +4,7 @@ Short description of what your package is, why you created it. What issues it fi
 
 ## Setup
 
-What setup steps are neccesarry and why>
+What setup steps are necessary and why?
 
 <details>
 <summary>PLATFORM</summary>
@@ -15,18 +15,18 @@ specific platform steps
 
 ## How to use
 
-How can we use the package descibe the most common ways with examples in 
+How can we use the package describe the most common ways with examples in 
 ```dart
  codeblocks
 ``` 
 
 ## Issues
 
-Please file any issues, bugs or feature request as an issue on our [GitHub](REPO URL) page. Commercial support is available if you need help with integration with your app or services. You can contact us at [support@iconica.nl](mailto:support@iconica.nl).
+Please file any issues, bugs or feature request as an issue on our [GitHub](https://github.com/Iconica-Development/REPO_NAME/issues) page. Commercial support is available if you need help with integration with your app or services. You can contact us at [support@iconica.nl](mailto:support@iconica.nl).
 
 ## Want to contribute
 
-If you would like to contribute to the plugin (e.g. by improving the documentation, solving a bug or adding a cool new feature), please carefully review our [contribution guide](../CONTRIBUTING.md) and send us your [pull request](URL TO PULL REQUEST TAB IN REPO).
+If you would like to contribute to the plugin (e.g. by improving the documentation, solving a bug or adding a cool new feature), please carefully review our [contribution guide](../CONTRIBUTING.md) and send us your [pull request](https://github.com/Iconica-Development/REPO_NAME/pulls).
 
 ## Author
 
