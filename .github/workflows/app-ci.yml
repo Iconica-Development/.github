@@ -52,12 +52,12 @@ jobs:
                 channel: "stable"
                 cache: true
                 cache-key: ${{ runner.OS }}-flutter-install-cache
+            - name: Project preparation
+              run: flutter pub get
             - name: Run additional commands
               if: inputs.additional_commands != ''
               run: |
                   ${{ inputs.additional_commands }}
-            - name: Project preparation
-              run: flutter pub get
             - name: Create dotenv and .env file from GitHub Secrets
               run: | 
                 if [[ -n "${DOTENV_BASE64}" ]]; then
