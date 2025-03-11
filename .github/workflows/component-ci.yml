@@ -1,6 +1,6 @@
 name: Iconica Standard Component CI Action
 
-# Workflow version: 2.0.0
+# Workflow version: 3.0.0
 
 # https://docs.github.com/en/actions/using-workflows/reusing-workflows
 on:
@@ -11,6 +11,11 @@ on:
           description: 'Subfolder where the Flutter project is located'
           required: false
           default: '.'
+        commands_before_flutter_get:
+          type: string
+          description: 'Commands to be run before flutter pub get'
+          required: false
+          default: ''
         additional_commands:
           type: string
           description: 'Additional commands to be run after flutter pub get'
@@ -44,12 +49,16 @@ jobs:
               channel: "stable"
               cache: true
               cache-key: ${{ runner.OS }}-flutter-install-cache
+          - name: Run commands before flutter pub get
+            if: inputs.commands_before_flutter_get != ''
+            run: |
+                ${{ inputs.commands_before_flutter_get }}
+          - name: Project preparation
+            run: flutter pub get
           - name: Run additional commands
             if: inputs.additional_commands != ''
             run: |
                 ${{ inputs.additional_commands }}
-          - name: Flutter pub get
-            run: flutter pub get
           - name: Flutter format
             run: dart format -o none --set-exit-if-changed .
           - name: Flutter analyze
