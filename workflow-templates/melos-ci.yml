@@ -1,5 +1,5 @@
 name: Iconica Standard Melos CI Workflow
-# Workflow Caller version: 1.0.0
+# Workflow Caller version: 2.0.0
 
 on:
   pull_request:
@@ -12,3 +12,4 @@ jobs:
     permissions: write-all
     with:
       subfolder: '.' # add optional subfolder to run workflow in
+      run_test: true # also execute `melos run test`

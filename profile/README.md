@@ -26,7 +26,7 @@ Each Starter Workflow calls a workflow inside this repository so Workflows can b
 | ---- | ------- | ---- | ----- |
 | app-ci | 3.0.0 | [app-ci.yml](../workflow-templates/app-ci.yml) | This Workflow runs the standard steps for Iconica Apps before approval can be given on a Pull Request |
 | component-ci | 2.0.0 | [component-ci.yml](../workflow-templates/component-ci.yml) | This Workflow runs the standard steps for Iconica Components before approval can be given on a Pull Request |
-| melos-ci | 1.0.0 | [melos-ci.yml](../workflow-templates/melos-ci.yml) | This Workflow runs the standard steps for Iconica Melos Packages before approval can be given on a Pull Request |
+| melos-ci | 2.0.0 | [melos-ci.yml](../workflow-templates/melos-ci.yml) | This Workflow runs the standard steps for Iconica Melos Packages before approval can be given on a Pull Request |
 | django | 1.0.0 | [django.yml](../workflow-templates/django.yml) | This Workflow runs the standard steps for Iconica Django Projects before approval can be given on a Pull Request |
 | flutter-cache | 2.0.0 | [flutter-cache.yml](../workflow-templates/flutter-cache.yml) | This Workflow runs a caching action on master and development branch to ensure better cache reuse |
 | firebase-web-cd | 6.0.0 | [firebase-web-cd.yml](../workflow-templates/firebase-web-cd.yml) | This workflow runs a Flutter build for web and deploys it to Firebase Hosting (on pull requests and pushes to master). Configuring this action is done through ```firebase init hosting:github``` |
