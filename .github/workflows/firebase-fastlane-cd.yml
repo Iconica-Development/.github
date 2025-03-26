@@ -1,5 +1,5 @@
 name: Reusable Firebase Fastlane CD Workflow
-# Workflow version: 1.0.0
+# Workflow version: 2.0.0
 
 on:
   workflow_call:
@@ -55,11 +55,20 @@ on:
         description: 'Optional extra environment variable 2 value, this should be the key of a GitHub secret'
         required: false
         type: string
+      extra_environment_variable3_key:
+        description: 'Optional extra environment variable 3 key, this is the ENV key'
+        required: false
+        type: string
+      extra_environment_variable3_value:
+        description: 'Optional extra environment variable 3 value, this should be the key of a GitHub secret'
+        required: false
+        type: string
 
 env:
     # These 2 environment variables allow for extra functionality inside the Fastlane file without having a reference to that functionality in this workflow
     ${{ inputs.extra_environment_variable1_key || 'EXTRA_ENVIRONMENT_VARIABLE_1' }}: ${{ secrets[inputs.extra_environment_variable1_value || ''] }}
     ${{ inputs.extra_environment_variable2_key || 'EXTRA_ENVIRONMENT_VARIABLE_2' }}: ${{ secrets[inputs.extra_environment_variable2_value || ''] }}
+    ${{ inputs.extra_environment_variable3_key || 'EXTRA_ENVIRONMENT_VARIABLE_3' }}: ${{ secrets[inputs.extra_environment_variable3_value || ''] }}
     DOTENV_BASE64: ${{ secrets[inputs.dotenv_override || 'DOTENV_BASE64'] }}
     FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets[inputs.service_account_secret_name || 'FIREBASE_SERVICE_ACCOUNT'] }}
     STORAGE_SERVICE_ACCOUNT_JSON: ${{ secrets[inputs.apple_provisioning_service_key || 'GOOGLE_CLOUD_STORAGE_SERVICE_ACCOUNT'] }}
