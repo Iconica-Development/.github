@@ -144,7 +144,7 @@ jobs:
         run: flutter test
 
       - name: Run Fastlane for Android
-        working-directory: android
+        working-directory: ${{ inputs.subfolder }}/android
         run: fastlane firebase_distribution --verbose
 
   ios-distribute:
@@ -209,5 +209,5 @@ jobs:
           pod install
 
       - name: Run Fastlane for Ios
-        working-directory: ios
+        working-directory: ${{ inputs.subfolder }}/ios
         run: fastlane firebase_distribution --verbose
