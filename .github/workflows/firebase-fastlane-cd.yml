@@ -39,6 +39,16 @@ on:
         required: false
         default: true
         type: boolean
+      commands_before_flutter_get:
+        type: string
+        description: 'Commands to be run before flutter pub get'
+        required: false
+        default: ''
+      additional_commands:
+        type: string
+        description: 'Additional commands to be run after flutter pub get'
+        required: false
+        default: ''
       extra_environment_variable1_key:
         description: 'Optional extra environment variable 1 key, this is the ENV key'
         required: false
@@ -137,8 +147,18 @@ jobs:
       - name: Install Fastlane
         run: gem install fastlane
   
-      - name: Install Flutter dependencies
+      - name: Run commands before flutter pub get
+        if: inputs.commands_before_flutter_get != ''
+        run: |
+            ${{ inputs.commands_before_flutter_get }}
+
+      - name: Project preparation
         run: flutter pub get
+
+      - name: Run additional commands
+        if: inputs.additional_commands != ''
+        run: |
+            ${{ inputs.additional_commands }}
 
       - name: Run tests
         run: flutter test
@@ -196,9 +216,19 @@ jobs:
 
       - name: Install Fastlane
         run: gem install fastlane
-  
-      - name: Install Flutter dependencies
+
+      - name: Run commands before flutter pub get
+        if: inputs.commands_before_flutter_get != ''
+        run: |
+            ${{ inputs.commands_before_flutter_get }}
+
+      - name: Project preparation
         run: flutter pub get
+
+      - name: Run additional commands
+        if: inputs.additional_commands != ''
+        run: |
+            ${{ inputs.additional_commands }}
 
       - name: Run tests
         run: flutter test
