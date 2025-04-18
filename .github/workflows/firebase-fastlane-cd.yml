@@ -88,7 +88,7 @@ jobs:
   android-distribute:
     name: Build and Distribute Android
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     if: ${{ inputs.run_android }}
     defaults:
         run:
