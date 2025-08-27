@@ -1,5 +1,5 @@
 name: Reusable Firebase Fastlane CD Workflow
-# Workflow version: 2.0.0
+# Workflow version: 3.0.0
 
 on:
   workflow_call:
@@ -169,7 +169,7 @@ jobs:
 
   ios-distribute:
     name: Build and Distribute Ios
-    runs-on: macos-15
+    runs-on: macos-latest
     if: inputs.run_ios
     timeout-minutes: 30
     defaults:
@@ -180,6 +180,11 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+
+      - name: Set up Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
 
       - name: Print Xcode version
         run: xcodebuild -version
