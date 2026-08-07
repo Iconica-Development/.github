@@ -81,13 +81,13 @@ jobs:
         with:
           fileName: "keystore.jks"
           fileDir: "./${{ inputs.subfolder }}/android/app"
-          encodedString: "${{ secrets.ANDROID_KEYSTORE_BASE64 }}"
+          encodedString: "${{ secrets.android_keystore_base64 }}"
       - name: "Configure Android release signing"
         run: |
           echo "storeFile=keystore.jks" >> ${{ inputs.subfolder }}/android/key.properties
-          echo "storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" >> ${{ inputs.subfolder }}/android/key.properties
-          echo "keyPassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" >> ${{ inputs.subfolder }}/android/key.properties
-          echo "keyAlias=${{ secrets.ANDROID_KEYSTORE_ALIAS }}" >> ${{ inputs.subfolder }}/android/key.properties
+          echo "storePassword=${{ secrets.android_keystore_password }}" >> ${{ inputs.subfolder }}/android/key.properties
+          echo "keyPassword=${{ secrets.android_keystore_password }}" >> ${{ inputs.subfolder }}/android/key.properties
+          echo "keyAlias=${{ secrets.android_keystore_alias }}" >> ${{ inputs.subfolder }}/android/key.properties
 
       # Build
       - name: "Execute any pre-build commands"
