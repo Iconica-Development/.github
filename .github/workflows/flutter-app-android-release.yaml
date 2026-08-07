@@ -39,15 +39,12 @@ on:
         default: ""
     secrets:
       android_keystore_base64:
-        type: "string"
         description: "A base64 encoded Android keystore to sign the app with"
         required: true
       android_keystore_password:
-        type: "string"
         description: "The password to unlock the keystore with"
         required: true
       android_keystore_alias:
-        type: "string"
         description: "The alias of the keystore"
         required: true
 
