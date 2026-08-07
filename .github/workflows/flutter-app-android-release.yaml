@@ -37,6 +37,11 @@ on:
         description: "Any commands to be ran before actually building the app (default='')"
         required: false
         default: ""
+      artifact_output_name:
+        type: "string"
+        description: "Name of the resulting archive (default='android-release')"
+        required: false
+        default: "android-release"
     secrets:
       android_keystore_base64:
         description: "A base64 encoded Android keystore to sign the app with"
@@ -99,6 +104,6 @@ jobs:
       - name: "Upload Android release"
         uses: "actions/upload-artifact@v7"
         with:
-          name: "android-release"
+          name: "${{ inputs.artifact_output_name }}"
           path: "${{ inputs.subfolder }}/build/app/outputs/apk/release/app-release.apk"
           if-no-files-found: "error"
