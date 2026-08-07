@@ -1,0 +1,107 @@
+name: Iconica Standard Flutter app Android release building
+# Workflow version: 1.0.0
+
+# https://docs.github.com/en/actions/using-workflows/reusing-workflows
+on:
+  workflow_call:
+    inputs:
+      runs_on:
+        type: "string"
+        description: |
+          The GitHub Actions runner to run the job on, relevant for the pre-installed Android SDK.
+          See https://github.com/actions/runner-images/blob/main/images for details of what's included. (default=ubuntu-latest)"
+        required: false
+        default: "ubuntu-latest"
+      subfolder:
+        type: "string"
+        description: "Subfolder where the Flutter project is located (default=.)"
+        required: false
+        default: "."
+      flutter_channel:
+        type: "string"
+        description: "The Flutter release channel to use (default=stable)"
+        required: false
+        default: "stable"
+      flutter_version_file:
+        type: "string"
+        description: "File to retrieve the Flutter version from (default=.fvmrc)"
+        required: false
+        default: ".fvmrc"
+      java_version:
+        type: "string"
+        description: "The version of Java to use for Android builds (default=17.x)"
+        required: false
+        default: "17.x"
+      pre_build_commands:
+        type: "string"
+        description: "Any commands to be ran before actually building the app (default='')"
+        required: false
+        default: ""
+    secrets:
+      android_keystore_base64:
+        type: "string"
+        description: "A base64 encoded Android keystore to sign the app with"
+        required: true
+      android_keystore_password:
+        type: "string"
+        description: "The password to unlock the keystore with"
+        required: true
+      android_keystore_alias:
+        type: "string"
+        description: "The alias of the keystore"
+        required: true
+
+jobs:
+  build:
+    runs-on: "${{ inputs.runs_on }}"
+    steps:
+      - name: "Clone the code"
+        uses: "actions/checkout@v7"
+      
+      # Setup Flutter
+      - name: "Setup Java"
+        uses: "actions/setup-java@v5"
+        with:
+          distribution: "temurin"
+          java-version: "${{ inputs.java_version }}"
+          cache: "gradle"
+      - name: "Setup Flutter"
+        uses: "subosito/flutter-action@v2"
+        with:
+          channel: "${{ inputs.flutter_channel }}"
+          flutter-version-file: "${{ inputs.flutter_version_file }}"
+          cache: true
+          pub-cache: true
+
+      # Setup Android release signing
+      - name: "Configure Android keystore"
+        uses: "timheuer/base64-to-file@v2"
+        with:
+          fileName: "keystore.jks"
+          fileDir: "./${{ inputs.subfolder }}/android/app"
+          encodedString: "${{ secrets.ANDROID_KEYSTORE_BASE64 }}"
+      - name: "Configure Android release signing"
+        run: |
+          echo "storeFile=keystore.jks" >> ${{ inputs.subfolder }}/android/key.properties
+          echo "storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" >> ${{ inputs.subfolder }}/android/key.properties
+          echo "keyPassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" >> ${{ inputs.subfolder }}/android/key.properties
+          echo "keyAlias=${{ secrets.ANDROID_KEYSTORE_ALIAS }}" >> ${{ inputs.subfolder }}/android/key.properties
+
+      # Build
+      - name: "Execute any pre-build commands"
+        if: inputs.pre_build_commands != ''
+        run: |
+          cd ${{ inputs.subfolder }}
+          ${{ inputs.pre_build_commands }}
+      - name: "Build Android release"
+        run: |
+          cd ${{ inputs.subfolder }}
+          flutter build apk --release
+      
+      # Upload
+      - name: "Upload Android release"
+        uses: "actions/upload-artifact@v7"
+        with:
+          name: "android-release"
+          path: "${{ inputs.subfolder }}/build/app/outputs/apk/release/app-release.apk"
+          if-no-files-found: "error"
