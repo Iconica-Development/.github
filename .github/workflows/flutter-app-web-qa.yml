@@ -1,0 +1,127 @@
+name: "Build and deploy a release version of the Flutter web app"
+
+# https://docs.github.com/en/actions/using-workflows/reusing-workflows
+on:
+  workflow_call:
+    inputs:
+      scaleway_project_id:
+        type: "string"
+        description: "The ID of the Scaleway project to deploy for"
+        required: true
+      scaleway_organization_id:
+        type: "string"
+        description: "The ID of the Scaleway organization to deploy for"
+        required: true
+      scaleway_region:
+        type: "string"
+        description: "The region to deploy the services to"
+        required: true
+      
+      container_registry:
+        type: "string"
+        description: "Registry to push the container image to"
+        required: true
+      container_deployment_namespace_id:
+        type: "string"
+        description: "ID of the container namespace that contains the required environment variables and secrets for the container to run"
+        required: true
+
+      container_context:
+        type: "string"
+        description: "Subfolder where the container context is located (default=.)"
+        required: false
+        default: "."
+      container_file:
+        type: "string"
+        description: "Name of the container file to build (default=Containerfile)"
+        required: false
+        default: "Containerfile"
+      container_build_args:
+        type: "string"
+        description: "Additional build arguments to pass along while building the container (default=none)"
+        required: false
+        default: ""
+      container_port:
+        type: "string"
+        description: "The port the deployed container should publish (default=80)"
+        required: false
+        default: "80"
+      pre_build_commands:
+        type: "string"
+        description: "Any commands to be executed before building"
+        required: false
+        default: ""
+    
+    secrets:
+      scaleway_access_key:
+        description: "The Scaleway access key to authenticate with"
+        required: true
+      scaleway_secret_key:
+        description: "The Scaleway secret key to authenticate with"
+        required: true
+
+jobs:
+  build:
+    name: "Build the app"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Clone the code"
+        uses: "actions/checkout@v7"
+      - name: "Setup Docker Buildx"
+        uses: "docker/setup-buildx-action@v4"
+      - name: "Login to Scaleway container registry"
+        uses: "docker/login-action@v3"
+        with:
+          username: "nologin"
+          password: "${{ secrets.scaleway_secret_key }}"
+          registry: "${{ inputs.container_registry }}"
+      
+      - name: "Execute commands before building"
+        if: "${{ inputs.pre_build_commands != '' }}"
+        run: "${{ inputs.pre_build_commands }}"
+
+      # Build
+      - name: "Build and push the container image"
+        uses: "docker/build-push-action@v7"
+        with:
+          context: "${{ inputs.container_context }}"
+          push: true
+          file: "${{ inputs.container_file }}"
+          build-args: ${{ inputs.container_build_args }}
+          tags: "${{ inputs.container_registry }}/qa-flutter-web:qa-${{ github.run_id }}"
+          cache-from: "type=gha"
+          cache-to: "type=gha,mode=max"
+
+  deploy:
+    name: "[Scaleway] Deploy the app"
+    needs: "build"
+    runs-on: "ubuntu-latest"
+    outputs:
+      url: "${{ fromJson(steps.container.outputs.json).public_endpoint }}"
+    steps:
+      - name: "Compute tags"
+        id: "tags"
+        run: |
+          echo "QA_ENVIRONMENT=qa-${{ github.run_id }}" >> $GITHUB_OUTPUT
+          echo "CLEANUP_AFTER=$(date -u -d '+7 days' '+%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
+
+      - name: "Deploy container on Scaleway"
+        uses: "scaleway/action-scw@v0.0.3"
+        id: "container"
+        with:
+          access-key: "${{ secrets.scaleway_access_key }}"
+          secret-key: "${{ secrets.scaleway_secret_key }}"
+          default-project-id: "${{ inputs.scaleway_project_id }}"
+          default-organization-id: "${{ inputs.scaleway_organization_id }}"
+          args: |
+            container container create --wait region=${{ inputs.scaleway_region }}
+            namespace-id=${{ inputs.container_deployment_namespace_id }}
+              name=qa-web-${{ github.run_id }}
+              min-scale=0 max-scale=1 memory-limit-bytes=0.128G mvcpu-limit=100
+              image=${{ inputs.container_registry }}/qa-test:qa-${{ github.run_id }}
+              port=${{ inputs.container_port }}
+              https-connections-only=true
+              tags.0=qa-env=${{ steps.tags.outputs.QA_ENVIRONMENT }}
+              tags.1=cleanup-after=${{ steps.tags.outputs.CLEANUP_AFTER }}
+              tags.2=ephemeral=true
+              tags.3=pr-id=${{ github.event.number }}
