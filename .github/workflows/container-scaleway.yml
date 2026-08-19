@@ -95,8 +95,6 @@ jobs:
           tags: "${{ inputs.container_registry }}/${{ inputs.container_name }}:${{ inputs.container_version }}"
           cache-from: "type=gha"
           cache-to: "type=gha,mode=max"
-      - name: "Clone the code"
-        uses: "actions/checkout@v7"
 
   deploy:
     needs: "build"
