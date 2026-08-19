@@ -1,21 +1,35 @@
 name: Iconica Standard Scaleway container deployment
-# Workflow version: 1.0.0
-
-# Expects the following GitHub repository variables to be set:
-# - CONTAINER_REGISTRY_ENDPOINT
-# - SCW_PROJECT_ID
-# - SCW_ORGANIZATION_ID
-# - CONTAINER_ID
-# - SCW_REGION
-
-# Expects the following GitHub secrets to be set:
-# - SCW_ACCESS_KEY
-# - SCW_SECRET_KEY
 
 # https://docs.github.com/en/actions/using-workflows/reusing-workflows
 on:
   workflow_call:
     inputs:
+      scaleway_project_id:
+        type: "string"
+        description: "The ID of the Scaleway project to deploy for"
+        required: true
+      scaleway_organization_id:
+        type: "string"
+        description: "The ID of the Scaleway organization to deploy for"
+        required: true
+      scaleway_region:
+        type: "string"
+        description: "The region to deploy the services to"
+        required: true
+      
+      container_registry:
+        type: "string"
+        description: "Registry to push the container image to"
+        required: true
+      container_name:
+        type: "string"
+        description: "Name of the final container image"
+        required: true
+      container_id:
+        type: "string"
+        description: "ID of the container to update"
+        required: true
+
       subfolder:
         type: "string"
         description: "Subfolder where the container file is located (default=.)"
@@ -36,15 +50,19 @@ on:
         description: "Additional build arguments to pass along while building the container (default=none)"
         required: false
         default: ""
-      container_name:
-        type: "string"
-        description: "Name of the final container image"
-        required: true
       container_version:
         type: "string"
         description: "Version of the final container image (default=latest)"
         required: false
         default: "latest"
+    
+    secrets:
+      scaleway_access_key:
+        description: "The Scaleway access key to authenticate with"
+        required: true
+      scaleway_secret_key:
+        description: "The Scaleway secret key to authenticate with"
+        required: true
 
 
 jobs:
@@ -53,25 +71,28 @@ jobs:
     steps:
       - name: "Clone the code"
         uses: "actions/checkout@v7"
-
-      # Build
-      - name: "Build the container image"
-        run: |
-          cd ${{ inputs.subfolder }}
-          docker build ${{ inputs.container_context }} \
-            -f ${{ inputs.container_file }} \
-            ${{ inputs.container_build_args }} \
-            -t ${{ vars.CONTAINER_REGISTRY_ENDPOINT }}/${{ inputs.container_name }}:${{ inputs.container_version }}
-      
-      # Push to container registry
+      - name: "Setup Docker Buildx"
+        uses: "docker/setup-buildx-action@v4"
       - name: "Login to Scaleway container registry"
         uses: "docker/login-action@v3"
         with:
           username: "nologin"
-          password: "${{ secrets.SCW_SECRET_KEY }}"
-          registry: "${{ vars.CONTAINER_REGISTRY_ENDPOINT }}"
-      - name: "Push the container image"
-        run: "docker push ${{ vars.CONTAINER_REGISTRY_ENDPOINT }}/${{ inputs.container_name }}:${{ inputs.container_version }}"
+          password: "${{ secrets.scaleway_secret_key }}"
+          registry: "${{ inputs.container_registry }}"
+
+      # Build
+      - name: "Build and push the container image"
+        uses: "docker/build-push-action@v7"
+        with:
+          context: "${{ inputs.container_context }}"
+          push: true
+          file: "${{ inputs.container_file }}"
+          build-args: ${{ inputs.container_build_args }}
+          tags: "${{ inputs.container_registry }}/${{ inputs.container_name }}-${{ inputs.container_version }}"
+          cache-from: "type=gha"
+          cache-to: "type=gha,mode=max"
+      - name: "Clone the code"
+        uses: "actions/checkout@v7"
 
   deploy:
     needs: "build"
@@ -80,8 +101,8 @@ jobs:
       - name: "Deploy container on Scaleway"
         uses: "scaleway/action-scw@v0.0.3"
         with:
-          access-key: "${{ secrets.SCW_ACCESS_KEY }}"
-          secret-key: "${{ secrets.SCW_SECRET_KEY }}"
-          default-project-id: "${{ vars.SCW_PROJECT_ID }}"
-          default-organization-id: "${{ vars.SCW_ORGANIZATION_ID }}"
-          args: "container container redeploy ${{ vars.CONTAINER_ID }} region=${{ vars.SCW_REGION }}"
+          access-key: "${{ secrets.scaleway_access_key }}"
+          secret-key: "${{ secrets.scaleway_secret_key }}"
+          default-project-id: "${{ inputs.scaleway_project_id }}"
+          default-organization-id: "${{ inputs.scaleway_organization_id }}"
+          args: "container container redeploy ${{ inputs.container_id }} region=${{ inputs.scaleway_region }}"
