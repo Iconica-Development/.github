@@ -190,9 +190,9 @@ jobs:
               tags.1=cleanup-after=${{ steps.tags.outputs.CLEANUP_AFTER }}
               tags.2=ephemeral=true
               tags.3=pr-id=${{ github.event.number }}
-              ${{ inputs.deploy_database && format('environment-variables.DATABASE_HOST={0}', fromJson(steps.database_instance.outputs.json).endpoints[0].ip) }}
-              ${{ inputs.deploy_database && format('environment-variables.DATABASE_PORT={0}', fromJson(steps.database_instance.outputs.json).endpoints[0].port) }}
-              ${{ inputs.deploy_database && format('environment-variables.DATABASE_NAME={0}', fromJson(steps.database_instance.outputs.json).endpoints[0].name) }}
-              ${{ inputs.deploy_database && 'environment-variables.DATABASE_USER=qa' }}
-              ${{ inputs.deploy_database && format('secret-environment-variables.DATABASE_PASSWORD={0}', fromJson(steps.database_instance.outputs.json).endpoints[0].password) }}
+              ${{ inputs.deploy_database && format('environment-variables.DATABASE_HOST={0}', fromJson(steps.database_instance.outputs.json).endpoints[0].ip) || '' }}
+              ${{ inputs.deploy_database && format('environment-variables.DATABASE_PORT={0}', fromJson(steps.database_instance.outputs.json).endpoints[0].port) || '' }}
+              ${{ inputs.deploy_database && format('environment-variables.DATABASE_NAME={0}', fromJson(steps.database_instance.outputs.json).endpoints[0].name) || '' }}
+              ${{ inputs.deploy_database && 'environment-variables.DATABASE_USER=qa' || '' }}
+              ${{ inputs.deploy_database && format('secret-environment-variables.DATABASE_PASSWORD={0}', fromJson(steps.database_instance.outputs.json).endpoints[0].password) || '' }}
               ${{ inputs.container_deployment_extra_arguments }}

@@ -34,7 +34,7 @@ jobs:
     runs-on: "ubuntu-latest"
     outputs:
       container_ids: "${{ steps.container_ids.outputs.ids }}"
-      database_instances_ids: "${{ steps.database_instance_ids.outputs.ids }}"
+      database_instance_ids: "${{ steps.database_instance_ids.outputs.ids }}"
       vpc_ids: "${{ steps.vpc_ids.outputs.ids }}"
     steps:
       # Containers
@@ -70,7 +70,7 @@ jobs:
           echo "ids=$IDS" >> $GITHUB_OUTPUT
       
       # Networks
-      - name: "[Scaleway] Get databases"
+      - name: "[Scaleway] Get VPC's"
         uses: "scaleway/action-scw@v0.0.3"
         id: "vpc"
         with:
@@ -88,6 +88,7 @@ jobs:
   reap-containers:
     name: "Reap containers"
     needs: "determine-reap"
+    if: "${{ needs.determine-reap.outputs.container_ids != '' }}"
     runs-on: "ubuntu-latest"
     strategy:
       matrix:
@@ -105,11 +106,11 @@ jobs:
   reap-databases:
     name: "Reap databases"
     needs: ["determine-reap", "reap-containers"]
-    if: "${{ always() }}"
+    if: "${{ always() && needs.determine-reap.outputs.database_instance_ids != '' }}"
     runs-on: "ubuntu-latest"
     strategy:
       matrix:
-        database_instance_id: ${{ fromJson(needs.determine-reap.outputs.database_instances_ids) }}
+        database_instance_id: ${{ fromJson(needs.determine-reap.outputs.database_instance_ids) }}
     steps:
       - name: "[Scaleway] Reap databases"
         uses: "scaleway/action-scw@v0.0.3"
@@ -123,7 +124,7 @@ jobs:
   reap-vpcs:
     name: "Reap VPC's"
     needs: ["determine-reap", "reap-containers", "reap-databases"]
-    if: "${{ always() }}"
+    if: "${{ always() && needs.determine-reap.outputs.vpc_ids != '' }}"
     runs-on: "ubuntu-latest"
     strategy:
       matrix:
