@@ -1,0 +1,139 @@
+name: "Cleanup any Scaleway deployments"
+
+on:
+  workflow_call:
+    inputs:
+      scaleway_project_id:
+        type: "string"
+        description: "The ID of the Scaleway project to deploy for"
+        required: true
+      scaleway_organization_id:
+        type: "string"
+        description: "The ID of the Scaleway organization to deploy for"
+        required: true
+      scaleway_region:
+        type: "string"
+        description: "The region to deploy the services to"
+        required: true
+      
+      reap_filter:
+        type: "string"
+        description: "The tag to filter resources to cleanup for"
+        required: true
+    secrets:
+      scaleway_access_key:
+        description: "The Scaleway access key to authenticate with"
+        required: true
+      scaleway_secret_key:
+        description: "The Scaleway secret key to authenticate with"
+        required: true
+
+jobs:
+  determine-reap:
+    name: "Determine resources to reap"
+    runs-on: "ubuntu-latest"
+    outputs:
+      container_ids: "${{ steps.container_ids.outputs.ids }}"
+      database_instances_ids: "${{ steps.database_instance_ids.outputs.ids }}"
+      vpc_ids: "${{ steps.vpc_ids.outputs.ids }}"
+    steps:
+      # Containers
+      - name: "[Scaleway] Get containers"
+        uses: "scaleway/action-scw@v0.0.3"
+        id: "containers"
+        with:
+          access-key: "${{ secrets.scaleway_access_key }}"
+          secret-key: "${{ secrets.scaleway_secret_key }}"
+          default-project-id: "${{ inputs.scaleway_project_id }}"
+          default-organization-id: "${{ inputs.scaleway_organization_id }}"
+          args: "container container list region=${{ inputs.scaleway_region }}"
+      - name: "[Scaleway] Determine containers to reap"
+        id: "container_ids"
+        run: |
+          IDS=$(echo '${{ steps.containers.outputs.json }}' | jq -c '[.[] | select(.tags[] == "${{ inputs.reap_filter }}") | .id'])
+          echo "ids=$IDS" >> $GITHUB_OUTPUT
+
+      # Databases
+      - name: "[Scaleway] Get databases"
+        uses: "scaleway/action-scw@v0.0.3"
+        id: "databases"
+        with:
+          access-key: "${{ secrets.scaleway_access_key }}"
+          secret-key: "${{ secrets.scaleway_secret_key }}"
+          default-project-id: "${{ inputs.scaleway_project_id }}"
+          default-organization-id: "${{ inputs.scaleway_organization_id }}"
+          args: "rdb instance list region=${{ inputs.scaleway_region }}"
+      - name: "[Scaleway] Determine databases to reap"
+        id: "database_instance_ids"
+        run: |
+          IDS=$(echo '${{ steps.databases.outputs.json }}' | jq -c '[.[] | select(.tags[] == "${{ inputs.reap_filter }}") | .id'])
+          echo "ids=$IDS" >> $GITHUB_OUTPUT
+      
+      # Networks
+      - name: "[Scaleway] Get databases"
+        uses: "scaleway/action-scw@v0.0.3"
+        id: "vpc"
+        with:
+          access-key: "${{ secrets.scaleway_access_key }}"
+          secret-key: "${{ secrets.scaleway_secret_key }}"
+          default-project-id: "${{ inputs.scaleway_project_id }}"
+          default-organization-id: "${{ inputs.scaleway_organization_id }}"
+          args: "vpc private-network list region=${{ inputs.scaleway_region }}"
+      - name: "[Scaleway] Determine networks to reap"
+        id: "vpc_ids"
+        run: |
+          IDS=$(echo '${{ steps.vpc.outputs.json }}' | jq -c '[.[] | select(.tags[] == "${{ inputs.reap_filter }}") | .id'])
+          echo "ids=$IDS" >> $GITHUB_OUTPUT
+
+  reap-containers:
+    name: "Reap containers"
+    needs: "determine-reap"
+    runs-on: "ubuntu-latest"
+    strategy:
+      matrix:
+        container_id: ${{ fromJson(needs.determine-reap.outputs.container_ids) }}
+    steps:
+      - name: "[Scaleway] Reap containers"
+        uses: "scaleway/action-scw@v0.0.3"
+        with:
+          access-key: "${{ secrets.scaleway_access_key }}"
+          secret-key: "${{ secrets.scaleway_secret_key }}"
+          default-project-id: "${{ inputs.scaleway_project_id }}"
+          default-organization-id: "${{ inputs.scaleway_organization_id }}"
+          args: "container container delete region=${{ inputs.scaleway_region }} ${{ matrix.container_id }}"
+
+  reap-databases:
+    name: "Reap databases"
+    needs: ["determine-reap", "reap-containers"]
+    if: "${{ always() }}"
+    runs-on: "ubuntu-latest"
+    strategy:
+      matrix:
+        database_instance_id: ${{ fromJson(needs.determine-reap.outputs.database_instances_ids) }}
+    steps:
+      - name: "[Scaleway] Reap databases"
+        uses: "scaleway/action-scw@v0.0.3"
+        with:
+          access-key: "${{ secrets.scaleway_access_key }}"
+          secret-key: "${{ secrets.scaleway_secret_key }}"
+          default-project-id: "${{ inputs.scaleway_project_id }}"
+          default-organization-id: "${{ inputs.scaleway_organization_id }}"
+          args: "rdb instance delete region=${{ inputs.scaleway_region }} ${{ matrix.database_instance_id }}"
+  
+  reap-vpcs:
+    name: "Reap VPC's"
+    needs: ["determine-reap", "reap-containers", "reap-databases"]
+    if: "${{ always() }}"
+    runs-on: "ubuntu-latest"
+    strategy:
+      matrix:
+        vpc_id: ${{ fromJson(needs.determine-reap.outputs.vpc_ids) }}
+    steps:
+      - name: "[Scaleway] Reap VPC's"
+        uses: "scaleway/action-scw@v0.0.3"
+        with:
+          access-key: "${{ secrets.scaleway_access_key }}"
+          secret-key: "${{ secrets.scaleway_secret_key }}"
+          default-project-id: "${{ inputs.scaleway_project_id }}"
+          default-organization-id: "${{ inputs.scaleway_organization_id }}"
+          args: "vpc private-network delete region=${{ inputs.scaleway_region }} ${{ matrix.vpc_id }}"
