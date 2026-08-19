@@ -30,11 +30,6 @@ on:
         description: "ID of the container to update"
         required: true
 
-      subfolder:
-        type: "string"
-        description: "Subfolder where the container file is located (default=.)"
-        required: false
-        default: "."
       container_context:
         type: "string"
         description: "Subfolder where the container context is located (default=.)"
@@ -55,6 +50,11 @@ on:
         description: "Version of the final container image (default=latest)"
         required: false
         default: "latest"
+      pre_build_commands:
+        type: "string"
+        description: "Any commands to be executed before building"
+        required: false
+        default: ""
     
     secrets:
       scaleway_access_key:
@@ -79,6 +79,10 @@ jobs:
           username: "nologin"
           password: "${{ secrets.scaleway_secret_key }}"
           registry: "${{ inputs.container_registry }}"
+      
+      - name: "Execute commands before building"
+        if: "${{ inputs.pre_build_commands != '' }}"
+        run: "${{ inputs.pre_build_commands }}"
 
       # Build
       - name: "Build and push the container image"
@@ -88,7 +92,7 @@ jobs:
           push: true
           file: "${{ inputs.container_file }}"
           build-args: ${{ inputs.container_build_args }}
-          tags: "${{ inputs.container_registry }}/${{ inputs.container_name }}-${{ inputs.container_version }}"
+          tags: "${{ inputs.container_registry }}/${{ inputs.container_name }}:${{ inputs.container_version }}"
           cache-from: "type=gha"
           cache-to: "type=gha,mode=max"
       - name: "Clone the code"
