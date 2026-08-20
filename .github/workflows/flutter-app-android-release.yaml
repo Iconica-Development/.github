@@ -57,6 +57,9 @@ jobs:
   build:
     name: "Build the app for Android"
     runs-on: "${{ inputs.runs_on }}"
+    timeout-minutes: 20
+    outputs:
+      artifact_url: "${{ steps.artifact.outputs.artifact-url }}"
     steps:
       - name: "Clone the code"
         uses: "actions/checkout@v7"
@@ -104,6 +107,7 @@ jobs:
       # Upload
       - name: "Upload Android release"
         uses: "actions/upload-artifact@v7"
+        id: "artifact"
         with:
           name: "${{ inputs.artifact_output_name }}"
           path: "${{ inputs.subfolder }}/build/app/outputs/apk/release/app-release.apk"
