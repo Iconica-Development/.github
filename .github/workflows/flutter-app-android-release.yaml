@@ -1,4 +1,4 @@
-name: Iconica Standard Flutter app Android release building
+name: "Iconica Standard Flutter app Android release building"
 # Workflow version: 1.0.0
 
 # https://docs.github.com/en/actions/using-workflows/reusing-workflows
@@ -55,6 +55,7 @@ on:
 
 jobs:
   build:
+    name: "Build the app for Android"
     runs-on: "${{ inputs.runs_on }}"
     steps:
       - name: "Clone the code"
