@@ -42,6 +42,7 @@ on:
         description: "Name of the resulting archive (default='android-release')"
         required: false
         default: "android-release"
+
     secrets:
       android_keystore_base64:
         description: "A base64 encoded Android keystore to sign the app with"
@@ -52,6 +53,11 @@ on:
       android_keystore_alias:
         description: "The alias of the keystore"
         required: true
+    
+    outputs:
+      artifact_url:
+        description: "The URL of the deployed container"
+        value: "${{ jobs.build.outputs.artifact_url }}"
 
 jobs:
   build:
