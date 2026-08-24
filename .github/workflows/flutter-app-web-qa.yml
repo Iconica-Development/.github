@@ -123,7 +123,7 @@ jobs:
             namespace-id=${{ inputs.container_deployment_namespace_id }}
               name=qa-web-${{ github.run_id }}
               min-scale=0 max-scale=1 memory-limit-bytes=0.128G mvcpu-limit=100
-              image=${{ inputs.container_registry }}/qa-test:qa-${{ github.run_id }}
+              image=${{ inputs.container_registry }}/qa-flutter-web:qa-${{ github.run_id }}
               port=${{ inputs.container_port }}
               https-connections-only=true
               tags.0=qa-env=${{ steps.tags.outputs.QA_ENVIRONMENT }}
