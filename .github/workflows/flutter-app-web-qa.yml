@@ -59,6 +59,11 @@ on:
       scaleway_secret_key:
         description: "The Scaleway secret key to authenticate with"
         required: true
+    
+    outputs:
+      url:
+        description: "The URL of the deployed container"
+        value: "${{ jobs.deploy.outputs.url }}"
 
 jobs:
   build:
