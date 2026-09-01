@@ -62,6 +62,12 @@ on:
         type: "string"
         description: "ID of the container namespace that contains the required environment variables and secrets for the container to run"
         required: true
+      pre_build_commands:
+        type: "string"
+        description: "Any commands to be executed before building"
+        required: false
+        default: ""
+
     secrets:
       scaleway_access_key:
         description: "The Scaleway access key to authenticate with"
@@ -90,6 +96,10 @@ jobs:
           username: "nologin"
           password: "${{ secrets.scaleway_secret_key }}"
           registry: "${{ inputs.container_registry }}"
+      
+      - name: "Execute commands before building"
+        if: "${{ inputs.pre_build_commands != '' }}"
+        run: "${{ inputs.pre_build_commands }}"
 
       # Build
       - name: "Build and push the container image"
