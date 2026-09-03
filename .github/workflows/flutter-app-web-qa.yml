@@ -46,6 +46,11 @@ on:
         description: "The port the deployed container should publish (default=80)"
         required: false
         default: "80"
+      container_name:
+        type: "string"
+        description: "The name of the container on Scaleway. Note that the CI run ID will be appended to this (default=qa-web)"
+        required: false
+        default: "qa-web"
       pre_build_commands:
         type: "string"
         description: "Any commands to be executed before building"
@@ -121,7 +126,7 @@ jobs:
           args: |
             container container create --wait region=${{ inputs.scaleway_region }}
             namespace-id=${{ inputs.container_deployment_namespace_id }}
-              name=qa-web-${{ github.run_id }}
+              name=${{ inputs.container_name }}-${{ github.run_id }}
               min-scale=0 max-scale=1 memory-limit-bytes=0.128G mvcpu-limit=100
               image=${{ inputs.container_registry }}/qa-flutter-web:qa-${{ github.run_id }}
               port=${{ inputs.container_port }}

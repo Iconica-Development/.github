@@ -96,7 +96,7 @@ jobs:
           username: "nologin"
           password: "${{ secrets.scaleway_secret_key }}"
           registry: "${{ inputs.container_registry }}"
-      
+
       - name: "Execute commands before building"
         if: "${{ inputs.pre_build_commands != '' }}"
         run: "${{ inputs.pre_build_commands }}"
