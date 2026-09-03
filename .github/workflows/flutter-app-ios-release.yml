@@ -1,0 +1,198 @@
+name: "Iconica Standard Flutter app iOS release building"
+
+# https://docs.github.com/en/actions/using-workflows/reusing-workflows
+on:
+  workflow_call:
+    inputs:
+      subfolder:
+        type: "string"
+        description: "Subfolder where the Flutter project is located (default=.)"
+        required: false
+        default: "."
+      flutter_channel:
+        type: "string"
+        description: "The Flutter release channel to use (default=stable)"
+        required: false
+        default: "stable"
+      flutter_version_file:
+        type: "string"
+        description: "File to retrieve the Flutter version from (default=.fvmrc)"
+        required: false
+        default: ".fvmrc"
+      pre_build_commands:
+        type: "string"
+        description: "Any commands to be ran before actually building the app (default='')"
+        required: false
+        default: ""
+      artifact_output_name:
+        type: "string"
+        description: "Name of the resulting archive (default='android-release')"
+        required: false
+        default: "android-release"
+      
+      ios_development_team:
+        type: "string"
+        description: "ID of the team used to sign the app with"
+        required: true
+      ios_code_sign_identity:
+        type: "string"
+        description: "A public/private key pair and certificate (stored in Keychain) that authenticates the app's developer and ensures the code hasn't been tampered with."
+        required: true
+      ios_bundle_identifier:
+        type: "string"
+        description: "The app identifier (for example 'com.iconica.app')"
+        required: true
+      ios_provisioning_profile_uuid:
+        type: "string"
+        description: "UUID of the provisioning profile."
+        required: true
+
+    secrets:
+      ios_provisioning_profile_base64:
+        description: "A base64 encoded iOS provisioning profile"
+        required: true
+      ios_certificate_base64:
+        description: "A base64 encoded iOS certificate to sign the app with"
+        required: true
+    
+    outputs:
+      artifact_url:
+        description: "The URL of the deployed container"
+        value: "${{ jobs.build.outputs.artifact_url }}"
+
+jobs:
+  build:
+    name: "Build the app for iOS"
+    runs-on: "macos-latest"
+    timeout-minutes: 20
+    outputs:
+      artifact_url: "${{ steps.artifact.outputs.artifact-url }}"
+    steps:
+      - name: "Clone the code"
+        uses: "actions/checkout@v7"
+      
+      # Setup Flutter
+      - name: "Setup Flutter"
+        uses: "subosito/flutter-action@v2"
+        with:
+          channel: "${{ inputs.flutter_channel }}"
+          flutter-version-file: "${{ inputs.flutter_version_file }}"
+          cache: true
+          pub-cache: true
+    
+      # Setup iOS release signing
+      - name: "Configure iOS provisioning profile"
+        uses: "timheuer/base64-to-file@v2"
+        with:
+          fileName: "provisioning_profile.mobileprovision"
+          fileDir: "./${{ inputs.subfolder }}"
+          encodedString: "${{ secrets.ios_provisioning_profile_base64 }}"
+      - name: "Configure iOS certificate"
+        uses: "timheuer/base64-to-file@v2"
+        with:
+          fileName: "certificate.p12"
+          fileDir: "./${{ inputs.subfolder }}"
+          encodedString: "${{ secrets.ios_certificate_base64 }}"
+      - name: "Setup iOS keychain"
+        env:
+          KEYCHAIN_PASSWORD: ""
+          P12_PASSWORD: ""
+        run: |
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+
+          # Create temporary keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          # Import certificate to keychain
+          security import ${{ inputs.subfolder }}/certificate.p12 -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
+
+          # Apply provisoning profile
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp ${{ inputs.subfolder }}/provisioning_profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles
+      - name: "Generate ExportOptions.plist"
+        run: |
+          cat <<EOF > "${{ inputs.subfolder }}/ios/ExportOptions.plist"
+          <plist>
+            <dict>
+              <key>method</key>
+              <string>ad-hoc</string>
+              <key>teamID</key>
+              <string>${{ vars.ios_development_team }}</string>
+              <key>signingCertificate</key>
+              <string>${{ vars.ios_code_sign_identity }}</string>
+              <key>provisioningProfiles</key>
+              <dict>
+                <key>${{ vars.ios_bundle_identifier }}</key>
+                <string>${{ vars.ios_provisioning_profile_uuid }}</string>
+              </dict>
+            </dict>
+          </plist>
+          EOF
+
+      # Setup dependency caching      
+      - name: "Install Flutter dependencies"
+        working-directory: "${{ inputs.subfolder }}"
+        run: "flutter pub get"
+
+      - name: "Cache CocoaPods"
+        id: "cocoapods-cache"
+        uses: "actions/cache@v5"
+        with:
+          path: "${{ inputs.subfolder }}/ios/Pods"
+          key: "${{ runner.os }}-pods-${{ hashFiles(format('{0}/ios/Podfile.lock', inputs.subfolder)) }}"
+          restore-keys: "${{ runner.os }}-pods-"
+      - name: "Install pods"
+        if: steps.cocoapods-cache.outputs.cache-hit != 'true'
+        working-directory: "${{ inputs.subfolder }}/ios"
+        run: "pod install"
+      
+      # Build
+      - name: "Execute any pre-build commands"
+        if: inputs.pre_build_commands != ''
+        run: |
+          cd ${{ inputs.subfolder }}
+          ${{ inputs.pre_build_commands }}
+      
+      # - name: "Build"
+      #   uses: "yukiarrr/ios-build-action@v1.13.0"
+      #   with:
+      #     project-path: "${{ inputs.subfolder }}/ios"
+      #     workspace-path: "Runner.xcworkspace"
+      #     p12-base64: "${{ secrets.ios_certificate_base64 }}"
+      #     mobileprovision-base64: "${{ secrets.ios_provisioning_profile_base64 }}"
+      #     team-id: "${{ inputs.ios_development_team }}"
+      #     export-method: "ad-hoc"
+
+      - name: "Build iOS release"
+        working-directory: "${{ inputs.subfolder }}/ios"
+        run: |
+          xcodebuild clean archive \
+            -workspace Runner.xcworkspace \
+            -scheme Runner \
+            -archivePath ./build/Runner.xcarchive
+            # CODE_SIGN_STYLE=Manual \
+            # CODE_SIGN_IDENTITY="${{ vars.ios_code_sign_identity }}" \
+            # PROVISIONING_PROFILE="${{ vars.ios_provisioning_profile_uuid }}" \
+            # DEVELOPMENT_TEAM="${{ vars.ios_development_team }}" \
+            # CODE_SIGN_KEYCHAIN=$RUNNER_TEMP/app-signing.keychain-db
+      
+      # Upload
+      - name: "Export ipa"
+        working-directory: "${{ inputs.subfolder }}/ios"
+        run: |
+            xcodebuild -exportArchive \
+              -archivePath ./build/Runner.xcarchive \
+              -exportPath ./build \
+              -exportOptionsPlist ./ExportOptions.plist
+              -teamID XW2S75FJUX
+            mv $(find ./ios/build -name "*.ipa") ./ios/build/app.ipa
+      - name: "Upload iOS release"
+        uses: "actions/upload-artifact@v7"
+        id: "artifact"
+        with:
+          name: "${{ inputs.artifact_output_name }}"
+          path: "${{ inputs.subfolder }}/build/app.ipa"
+          if-no-files-found: "error"
