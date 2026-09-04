@@ -201,5 +201,5 @@ jobs:
               ${{ inputs.deploy_database && format('environment-variables.DATABASE_PORT={0}', fromJson(steps.database_instance.outputs.json).endpoints[0].port) || '' }}
               ${{ inputs.deploy_database && format('environment-variables.DATABASE_NAME={0}', fromJson(steps.database.outputs.json)[0].name) || '' }}
               ${{ inputs.deploy_database && 'environment-variables.DATABASE_USER=qa' || '' }}
-              ${{ inputs.deploy_database && format('secret-environment-variables.DATABASE_PASSWORD={0}', fromJson(steps.database_instance.outputs.json).endpoints[0].password) || '' }}
+              ${{ inputs.deploy_database && 'secret-environment-variables.DATABASE_PASSWORD=QA-prtest01!' || '' }}
               ${{ inputs.container_deployment_extra_arguments }}
