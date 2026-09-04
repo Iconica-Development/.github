@@ -150,7 +150,7 @@ jobs:
               name=qa-${{ github.event.number }}
               engine=PostgreSQL-17
               user-name=qa
-              password=QA-dev01
+              password=QA-prtest01!
               node-type="DB-DEV-S"
               init-endpoints.0.private-network.private-network-id=${{ fromJson(steps.vpc.outputs.json).id }}
               init-endpoints.0.private-network.enable-ipam=true
