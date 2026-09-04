@@ -120,12 +120,6 @@ jobs:
     outputs:
       url: "${{ fromJson(steps.container.outputs.json).public_endpoint }}"
     steps:
-      - name: "Compute tags"
-        id: "tags"
-        run: |
-          echo "QA_ENVIRONMENT=qa-${{ github.run_id }}" >> $GITHUB_OUTPUT
-          echo "CLEANUP_AFTER=$(date -u -d '+7 days' '+%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
-
       # VPC
       - name: "[Scaleway] Create VPC"
         uses: "scaleway/action-scw@v0.0.3"
@@ -137,11 +131,9 @@ jobs:
           default-organization-id: "${{ inputs.scaleway_organization_id }}"
           args: >
             vpc private-network create region=${{ inputs.scaleway_region }}
-              name=${{ steps.tags.outputs.QA_ENVIRONMENT }}
-              tags.0=qa-env=${{ steps.tags.outputs.QA_ENVIRONMENT }}
-              tags.1=cleanup-after=${{ steps.tags.outputs.CLEANUP_AFTER }}
-              tags.2=ephemeral=true
-              tags.3=pr-id=${{ github.event.number }}
+              name=qa-${{ github.event.number }}
+              tags.0=ephemeral=true
+              tags.1=pr-id=${{ github.event.number }}
 
       # Database
       - name: "[Scaleway] Create database instance"
@@ -155,7 +147,7 @@ jobs:
           default-organization-id: "${{ inputs.scaleway_organization_id }}"
           args: >
             rdb instance create --wait region=${{ inputs.scaleway_region }}
-              name=${{ steps.tags.outputs.QA_ENVIRONMENT }}
+              name=qa-${{ github.event.number }}
               engine=PostgreSQL-17
               user-name=qa
               password=QA-dev01
@@ -163,10 +155,8 @@ jobs:
               init-endpoints.0.private-network.private-network-id=${{ fromJson(steps.vpc.outputs.json).id }}
               init-endpoints.0.private-network.enable-ipam=true
               disable-backup=true
-              tags.0=qa-env=${{ steps.tags.outputs.QA_ENVIRONMENT }}
-              tags.1=cleanup-after=${{ steps.tags.outputs.CLEANUP_AFTER }}
-              tags.2=ephemeral=true
-              tags.3=pr-id=${{ github.event.number }}
+              tags.0=ephemeral=true
+              tags.1=pr-id=${{ github.event.number }}
       - name: "[Scaleway] Create database"
         uses: "scaleway/action-scw@v0.0.3"
         id: "database"
@@ -190,16 +180,14 @@ jobs:
           args: >
             container container create --wait region=${{ inputs.scaleway_region }}
               namespace-id=${{ inputs.container_deployment_namespace_id }}
-              name=qa-${{ github.run_id }}
+              name=${{ inputs.container_name }}-${{ github.event.number }}
               min-scale=0 max-scale=1 memory-limit-bytes=0.128G mvcpu-limit=100
               image=${{ inputs.container_registry }}/qa-test:qa-${{ github.run_id }}
               port=${{ inputs.container_port }}
               private-network-id=${{ fromJson(steps.vpc.outputs.json).id }}
               https-connections-only=true
-              tags.0=qa-env=${{ steps.tags.outputs.QA_ENVIRONMENT }}
-              tags.1=cleanup-after=${{ steps.tags.outputs.CLEANUP_AFTER }}
-              tags.2=ephemeral=true
-              tags.3=pr-id=${{ github.event.number }}
+              tags.0=ephemeral=true
+              tags.1=pr-id=${{ github.event.number }}
               ${{ inputs.deploy_database && format('environment-variables.DATABASE_HOST={0}', fromJson(steps.database_instance.outputs.json).endpoints[0].ip) || '' }}
               ${{ inputs.deploy_database && format('environment-variables.DATABASE_PORT={0}', fromJson(steps.database_instance.outputs.json).endpoints[0].port) || '' }}
               ${{ inputs.deploy_database && format('environment-variables.DATABASE_NAME={0}', fromJson(steps.database_instance.outputs.json).endpoints[0].name) || '' }}
