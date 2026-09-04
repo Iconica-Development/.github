@@ -157,6 +157,15 @@ jobs:
               disable-backup=true
               tags.0=ephemeral=true
               tags.1=pr-id=${{ github.event.number }}
+      - name: "[Scaleway] Create ACL rule to allow connections"
+        uses: "scaleway/action-scw@v0.0.3"
+        if: "${{ inputs.deploy_database }}"
+        with:
+          access-key: "${{ secrets.scaleway_access_key }}"
+          secret-key: "${{ secrets.scaleway_secret_key }}"
+          default-project-id: "${{ inputs.scaleway_project_id }}"
+          default-organization-id: "${{ inputs.scaleway_organization_id }}"
+          args: "rdb acl add region=${{ inputs.scaleway_region }} instance-id=${{ fromJson(steps.database_instance.outputs.json).id }} 0.0.0.0/0"
       - name: "[Scaleway] Get default database"
         uses: "scaleway/action-scw@v0.0.3"
         id: "database"
