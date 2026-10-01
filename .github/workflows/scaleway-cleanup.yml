@@ -186,8 +186,51 @@ jobs:
       matrix:
         vpc_id: ${{ fromJson(needs.determine-reap.outputs.vpc_ids) }}
     steps:
+      - name: "[Scaleway] Check for containers still attached to VPC"
+        uses: "scaleway/action-scw@v0.0.3"
+        id: "containers_before_wait"
+        with:
+          access-key: "${{ secrets.scaleway_access_key }}"
+          secret-key: "${{ secrets.scaleway_secret_key }}"
+          default-project-id: "${{ inputs.scaleway_project_id }}"
+          default-organization-id: "${{ inputs.scaleway_organization_id }}"
+          args: "container container list region=${{ inputs.scaleway_region }}"
+      - name: "[Scaleway] Determine whether VPC is still in use"
+        id: "vpc_in_use"
+        env:
+          CONTAINERS: "${{ steps.containers_before_wait.outputs.json }}"
+          VPC_ID: "${{ matrix.vpc_id }}"
+        run: |
+          ATTACHED=$(jq --arg vpc_id "$VPC_ID" '[.[] | select(.private_network_id == $vpc_id)] | length' <<< "$CONTAINERS")
+          echo "attached=$([[ "$ATTACHED" -gt 0 ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+      - name: "[Scaleway] Wait for container detachment"
+        if: "${{ steps.vpc_in_use.outputs.attached == 'true' }}"
+        run: "sleep 60"
+      - name: "[Scaleway] Recheck VPC container attachments"
+        uses: "scaleway/action-scw@v0.0.3"
+        id: "containers_after_wait"
+        if: "${{ steps.vpc_in_use.outputs.attached == 'true' }}"
+        with:
+          access-key: "${{ secrets.scaleway_access_key }}"
+          secret-key: "${{ secrets.scaleway_secret_key }}"
+          default-project-id: "${{ inputs.scaleway_project_id }}"
+          default-organization-id: "${{ inputs.scaleway_organization_id }}"
+          args: "container container list region=${{ inputs.scaleway_region }}"
+      - name: "[Scaleway] Confirm containers detached from VPC"
+        id: "vpc_still_in_use"
+        if: "${{ steps.vpc_in_use.outputs.attached == 'true' }}"
+        env:
+          CONTAINERS: "${{ steps.containers_after_wait.outputs.json }}"
+          VPC_ID: "${{ matrix.vpc_id }}"
+        run: |
+          ATTACHED=$(jq --arg vpc_id "$VPC_ID" '[.[] | select(.private_network_id == $vpc_id)] | length' <<< "$CONTAINERS")
+          if [[ "$ATTACHED" -gt 0 ]]; then
+            echo "Scaleway still reports $ATTACHED container(s) attached to VPC $VPC_ID after waiting; leaving the VPC for a later cleanup run." >&2
+            exit 1
+          fi
       - name: "[Scaleway] Reap VPC's"
         uses: "scaleway/action-scw@v0.0.3"
+        if: "${{ steps.vpc_still_in_use.outcome != 'failure' }}"
         with:
           access-key: "${{ secrets.scaleway_access_key }}"
           secret-key: "${{ secrets.scaleway_secret_key }}"
