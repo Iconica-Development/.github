@@ -143,7 +143,7 @@ jobs:
           secret-key: "${{ secrets.scaleway_secret_key }}"
           default-project-id: "${{ inputs.scaleway_project_id }}"
           default-organization-id: "${{ inputs.scaleway_organization_id }}"
-          args: "rdb instance list region=${{ inputs.scaleway_region }} name=qa-shared"
+          args: "rdb instance list region=${{ inputs.scaleway_region }} project-id=${{ inputs.scaleway_project_id }} name=qa-shared"
       - name: "[Scaleway] Check whether shared database instance exists"
         id: "database_instance_exists"
         if: "${{ inputs.deploy_database }}"
@@ -166,6 +166,7 @@ jobs:
           default-organization-id: "${{ inputs.scaleway_organization_id }}"
           args: >
             rdb instance create --wait region=${{ inputs.scaleway_region }}
+              project-id=${{ inputs.scaleway_project_id }}
               name=qa-shared
               engine=PostgreSQL-17
               user-name=qa
@@ -182,7 +183,7 @@ jobs:
           secret-key: "${{ secrets.scaleway_secret_key }}"
           default-project-id: "${{ inputs.scaleway_project_id }}"
           default-organization-id: "${{ inputs.scaleway_organization_id }}"
-          args: "rdb instance list region=${{ inputs.scaleway_region }} name=qa-shared"
+          args: "rdb instance list region=${{ inputs.scaleway_region }} project-id=${{ inputs.scaleway_project_id }} name=qa-shared"
       - name: "[Scaleway] Resolve shared database instance"
         id: "database_instance_id"
         if: "${{ inputs.deploy_database }}"
@@ -313,7 +314,8 @@ jobs:
               ${{ inputs.deploy_database && format('environment-variables.DATABASE_PORT={0}', steps.database_endpoint.outputs.port) || '' }}
               ${{ inputs.deploy_database && format('environment-variables.DATABASE_NAME=qa-{0}', github.event.number) || '' }}
               ${{ inputs.deploy_database && 'environment-variables.DATABASE_USER=qa' || '' }}
-              ${{ inputs.deploy_database && format('secret-environment-variables.DATABASE_PASSWORD={0}', secrets.scaleway_database_password) || '' }}
+              ${{ inputs.deploy_database && 'secret-environment-variables.0.key=DATABASE_PASSWORD' || '' }}
+              ${{ inputs.deploy_database && format('secret-environment-variables.0.value={0}', secrets.scaleway_database_password) || '' }}
               ${{ inputs.container_deployment_extra_arguments }}
       - name: "Resolve the container URL"
         id: "container_url"
