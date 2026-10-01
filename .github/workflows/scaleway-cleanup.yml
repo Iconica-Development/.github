@@ -80,7 +80,7 @@ jobs:
           secret-key: "${{ secrets.scaleway_secret_key }}"
           default-project-id: "${{ inputs.scaleway_project_id }}"
           default-organization-id: "${{ inputs.scaleway_organization_id }}"
-          args: "rdb instance list region=${{ inputs.scaleway_region }} name=qa-shared"
+          args: "rdb instance list region=${{ inputs.scaleway_region }} project-id=${{ inputs.scaleway_project_id }} name=qa-shared"
       - name: "[Scaleway] Resolve shared QA database instance"
         id: "shared_database_instance_id"
         env:
@@ -181,6 +181,35 @@ jobs:
           default-project-id: "${{ inputs.scaleway_project_id }}"
           default-organization-id: "${{ inputs.scaleway_organization_id }}"
           args: "rdb database delete region=${{ inputs.scaleway_region }} instance-id=${{ needs.determine-reap.outputs.shared_database_instance_id }} name=qa-${{ github.event.number }}"
+      - name: "[Scaleway] List users on shared instance"
+        uses: "scaleway/action-scw@v0.0.3"
+        id: "database_users"
+        with:
+          access-key: "${{ secrets.scaleway_access_key }}"
+          secret-key: "${{ secrets.scaleway_secret_key }}"
+          default-project-id: "${{ inputs.scaleway_project_id }}"
+          default-organization-id: "${{ inputs.scaleway_organization_id }}"
+          args: "rdb user list region=${{ inputs.scaleway_region }} instance-id=${{ needs.determine-reap.outputs.shared_database_instance_id }}"
+      - name: "[Scaleway] Check whether PR database user exists"
+        id: "pr_database_user"
+        env:
+          DATABASE_USERS: "${{ steps.database_users.outputs.json }}"
+          DATABASE_USER: "qa-${{ github.event.number }}"
+        run: |
+          if jq -e --arg name "$DATABASE_USER" '[.[] | select(.name == $name)] | length > 0' <<< "$DATABASE_USERS" >/dev/null; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: "[Scaleway] Delete PR database user"
+        uses: "scaleway/action-scw@v0.0.3"
+        if: "${{ steps.pr_database_user.outputs.exists == 'true' }}"
+        with:
+          access-key: "${{ secrets.scaleway_access_key }}"
+          secret-key: "${{ secrets.scaleway_secret_key }}"
+          default-project-id: "${{ inputs.scaleway_project_id }}"
+          default-organization-id: "${{ inputs.scaleway_organization_id }}"
+          args: "rdb user delete region=${{ inputs.scaleway_region }} instance-id=${{ needs.determine-reap.outputs.shared_database_instance_id }} name=qa-${{ github.event.number }}"
   
   reap-vpcs:
     name: "Reap VPC's"

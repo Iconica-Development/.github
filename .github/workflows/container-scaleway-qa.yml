@@ -76,7 +76,7 @@ on:
         description: "The Scaleway secret key to authenticate with"
         required: true
       scaleway_database_password:
-        description: "Password for the shared QA database user. Required when deploy_database is true"
+        description: "Password for the admin user of the shared QA database instance, used when that instance is first provisioned. Required when deploy_database is true"
         required: false
     
     outputs:
@@ -281,7 +281,55 @@ jobs:
           default-project-id: "${{ inputs.scaleway_project_id }}"
           default-organization-id: "${{ inputs.scaleway_organization_id }}"
           args: "rdb database create region=${{ inputs.scaleway_region }} instance-id=${{ steps.database_instance_id.outputs.id }} name=qa-${{ github.event.number }}"
-      - name: "[Scaleway] Grant QA user access to PR database"
+      # Rotated on every run so the password never has to be persisted anywhere.
+      - name: "Generate a password for the PR database user"
+        id: "pr_database_password"
+        if: "${{ inputs.deploy_database }}"
+        run: |
+          PASSWORD="$(openssl rand -hex 24)aA1!"
+          echo "::add-mask::$PASSWORD"
+          echo "password=$PASSWORD" >> "$GITHUB_OUTPUT"
+      - name: "[Scaleway] List users on shared instance"
+        uses: "scaleway/action-scw@v0.0.3"
+        id: "database_users"
+        if: "${{ inputs.deploy_database }}"
+        with:
+          access-key: "${{ secrets.scaleway_access_key }}"
+          secret-key: "${{ secrets.scaleway_secret_key }}"
+          default-project-id: "${{ inputs.scaleway_project_id }}"
+          default-organization-id: "${{ inputs.scaleway_organization_id }}"
+          args: "rdb user list region=${{ inputs.scaleway_region }} instance-id=${{ steps.database_instance_id.outputs.id }}"
+      - name: "[Scaleway] Check whether PR database user exists"
+        id: "pr_database_user"
+        if: "${{ inputs.deploy_database }}"
+        env:
+          DATABASE_USERS: "${{ steps.database_users.outputs.json }}"
+          DATABASE_USER: "qa-${{ github.event.number }}"
+        run: |
+          if jq -e --arg name "$DATABASE_USER" '[.[] | select(.name == $name)] | length > 0' <<< "$DATABASE_USERS" >/dev/null; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: "[Scaleway] Create PR database user"
+        uses: "scaleway/action-scw@v0.0.3"
+        if: "${{ inputs.deploy_database && steps.pr_database_user.outputs.exists != 'true' }}"
+        with:
+          access-key: "${{ secrets.scaleway_access_key }}"
+          secret-key: "${{ secrets.scaleway_secret_key }}"
+          default-project-id: "${{ inputs.scaleway_project_id }}"
+          default-organization-id: "${{ inputs.scaleway_organization_id }}"
+          args: "rdb user create region=${{ inputs.scaleway_region }} instance-id=${{ steps.database_instance_id.outputs.id }} name=qa-${{ github.event.number }} generate-password=false password=${{ steps.pr_database_password.outputs.password }} is-admin=false"
+      - name: "[Scaleway] Rotate PR database user password"
+        uses: "scaleway/action-scw@v0.0.3"
+        if: "${{ inputs.deploy_database && steps.pr_database_user.outputs.exists == 'true' }}"
+        with:
+          access-key: "${{ secrets.scaleway_access_key }}"
+          secret-key: "${{ secrets.scaleway_secret_key }}"
+          default-project-id: "${{ inputs.scaleway_project_id }}"
+          default-organization-id: "${{ inputs.scaleway_organization_id }}"
+          args: "rdb user update region=${{ inputs.scaleway_region }} instance-id=${{ steps.database_instance_id.outputs.id }} name=qa-${{ github.event.number }} generate-password=false password=${{ steps.pr_database_password.outputs.password }}"
+      - name: "[Scaleway] Grant PR database user access to PR database"
         uses: "scaleway/action-scw@v0.0.3"
         if: "${{ inputs.deploy_database }}"
         with:
@@ -289,7 +337,7 @@ jobs:
           secret-key: "${{ secrets.scaleway_secret_key }}"
           default-project-id: "${{ inputs.scaleway_project_id }}"
           default-organization-id: "${{ inputs.scaleway_organization_id }}"
-          args: "rdb privilege set region=${{ inputs.scaleway_region }} instance-id=${{ steps.database_instance_id.outputs.id }} database-name=qa-${{ github.event.number }} user-name=qa permission=all"
+          args: "rdb privilege set region=${{ inputs.scaleway_region }} instance-id=${{ steps.database_instance_id.outputs.id }} database-name=qa-${{ github.event.number }} user-name=qa-${{ github.event.number }} permission=all"
     
       # Container
       - name: "[Scaleway] Deploy container"
@@ -313,9 +361,8 @@ jobs:
               ${{ inputs.deploy_database && format('environment-variables.DATABASE_HOST={0}', steps.database_endpoint.outputs.host) || '' }}
               ${{ inputs.deploy_database && format('environment-variables.DATABASE_PORT={0}', steps.database_endpoint.outputs.port) || '' }}
               ${{ inputs.deploy_database && format('environment-variables.DATABASE_NAME=qa-{0}', github.event.number) || '' }}
-              ${{ inputs.deploy_database && 'environment-variables.DATABASE_USER=qa' || '' }}
-              ${{ inputs.deploy_database && 'secret-environment-variables.0.key=DATABASE_PASSWORD' || '' }}
-              ${{ inputs.deploy_database && format('secret-environment-variables.0.value={0}', secrets.scaleway_database_password) || '' }}
+              ${{ inputs.deploy_database && format('environment-variables.DATABASE_USER=qa-{0}', github.event.number) || '' }}
+              ${{ inputs.deploy_database && format('secret-environment-variables.DATABASE_PASSWORD={0}', steps.pr_database_password.outputs.password) || '' }}
               ${{ inputs.container_deployment_extra_arguments }}
       - name: "Resolve the container URL"
         id: "container_url"
