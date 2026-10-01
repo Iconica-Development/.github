@@ -35,6 +35,7 @@ jobs:
     outputs:
       container_ids: "${{ steps.container_ids.outputs.ids }}"
       database_instance_ids: "${{ steps.database_instance_ids.outputs.ids }}"
+      shared_database_instance_id: "${{ steps.shared_database_instance_id.outputs.id }}"
       vpc_ids: "${{ steps.vpc_ids.outputs.ids }}"
     steps:
       # Containers
@@ -68,6 +69,25 @@ jobs:
         run: |
           IDS=$(echo '${{ steps.databases.outputs.json }}' | jq -c '[.[] | select(.tags[] == "${{ inputs.reap_filter }}") | .id'])
           echo "ids=$IDS" >> $GITHUB_OUTPUT
+
+      # The shared QA instance is intentionally not tagged as ephemeral and must
+      # never be deleted by this cleanup workflow.
+      - name: "[Scaleway] Find shared QA database instance"
+        uses: "scaleway/action-scw@v0.0.3"
+        id: "shared_database_instances"
+        with:
+          access-key: "${{ secrets.scaleway_access_key }}"
+          secret-key: "${{ secrets.scaleway_secret_key }}"
+          default-project-id: "${{ inputs.scaleway_project_id }}"
+          default-organization-id: "${{ inputs.scaleway_organization_id }}"
+          args: "rdb instance list region=${{ inputs.scaleway_region }} name=qa-shared"
+      - name: "[Scaleway] Resolve shared QA database instance"
+        id: "shared_database_instance_id"
+        env:
+          DATABASE_INSTANCES: "${{ steps.shared_database_instances.outputs.json }}"
+        run: |
+          INSTANCE_ID=$(jq -r '[.[] | select(.name == "qa-shared")][0].id // empty' <<< "$DATABASE_INSTANCES")
+          echo "id=$INSTANCE_ID" >> "$GITHUB_OUTPUT"
       
       # Networks
       - name: "[Scaleway] Get VPC's"
@@ -120,10 +140,46 @@ jobs:
           default-project-id: "${{ inputs.scaleway_project_id }}"
           default-organization-id: "${{ inputs.scaleway_organization_id }}"
           args: "rdb instance delete region=${{ inputs.scaleway_region }} ${{ matrix.database_instance_id }}"
+
+  reap-pr-database:
+    name: "Reap PR database from shared instance"
+    needs: ["determine-reap", "reap-containers"]
+    if: "${{ always() && github.event.number != '' && needs.determine-reap.outputs.shared_database_instance_id != '' }}"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "[Scaleway] List databases on shared instance"
+        uses: "scaleway/action-scw@v0.0.3"
+        id: "databases"
+        with:
+          access-key: "${{ secrets.scaleway_access_key }}"
+          secret-key: "${{ secrets.scaleway_secret_key }}"
+          default-project-id: "${{ inputs.scaleway_project_id }}"
+          default-organization-id: "${{ inputs.scaleway_organization_id }}"
+          args: "rdb database list region=${{ inputs.scaleway_region }} instance-id=${{ needs.determine-reap.outputs.shared_database_instance_id }}"
+      - name: "[Scaleway] Check whether PR database exists"
+        id: "pr_database"
+        env:
+          DATABASES: "${{ steps.databases.outputs.json }}"
+          DATABASE_NAME: "qa-${{ github.event.number }}"
+        run: |
+          if jq -e --arg name "$DATABASE_NAME" '[.[] | select(.name == $name)] | length > 0' <<< "$DATABASES" >/dev/null; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: "[Scaleway] Delete PR database"
+        uses: "scaleway/action-scw@v0.0.3"
+        if: "${{ steps.pr_database.outputs.exists == 'true' }}"
+        with:
+          access-key: "${{ secrets.scaleway_access_key }}"
+          secret-key: "${{ secrets.scaleway_secret_key }}"
+          default-project-id: "${{ inputs.scaleway_project_id }}"
+          default-organization-id: "${{ inputs.scaleway_organization_id }}"
+          args: "rdb database delete region=${{ inputs.scaleway_region }} instance-id=${{ needs.determine-reap.outputs.shared_database_instance_id }} name=qa-${{ github.event.number }}"
   
   reap-vpcs:
     name: "Reap VPC's"
-    needs: ["determine-reap", "reap-containers", "reap-databases"]
+    needs: ["determine-reap", "reap-containers", "reap-databases", "reap-pr-database"]
     if: "${{ always() && needs.determine-reap.outputs.vpc_ids != '[]' }}"
     runs-on: "ubuntu-latest"
     strategy:
