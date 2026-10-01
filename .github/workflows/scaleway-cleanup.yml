@@ -99,11 +99,16 @@ jobs:
           default-project-id: "${{ inputs.scaleway_project_id }}"
           default-organization-id: "${{ inputs.scaleway_organization_id }}"
           args: "vpc private-network list region=${{ inputs.scaleway_region }}"
+      # Only drains the per-PR networks created before QA moved to a shared one;
+      # the untagged qa-shared network is never reaped.
       - name: "[Scaleway] Determine networks to reap"
         id: "vpc_ids"
+        env:
+          PRIVATE_NETWORKS: "${{ steps.vpc.outputs.json }}"
+          REAP_FILTER: "${{ inputs.reap_filter }}"
         run: |
-          IDS=$(echo '${{ steps.vpc.outputs.json }}' | jq -c '[.[] | select(.tags[] == "${{ inputs.reap_filter }}") | .id'])
-          echo "ids=$IDS" >> $GITHUB_OUTPUT
+          IDS=$(jq -c --arg filter "$REAP_FILTER" '[.[] | select(.name != "qa-shared") | select(((.tags // []) | index($filter)) != null) | .id]' <<< "$PRIVATE_NETWORKS")
+          echo "ids=$IDS" >> "$GITHUB_OUTPUT"
 
   reap-containers:
     name: "Reap containers"
