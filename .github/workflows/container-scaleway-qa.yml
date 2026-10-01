@@ -135,11 +135,32 @@ jobs:
               tags.0=ephemeral=true
               tags.1=pr-id=${{ github.event.number }}
 
-      # Database
-      - name: "[Scaleway] Create database instance"
+      # Provision one shared instance on first use; subsequent PRs reuse it.
+      - name: "[Scaleway] Find shared database instance"
         uses: "scaleway/action-scw@v0.0.3"
-        id: "database_instance"
+        id: "database_instances"
         if: "${{ inputs.deploy_database }}"
+        with:
+          access-key: "${{ secrets.scaleway_access_key }}"
+          secret-key: "${{ secrets.scaleway_secret_key }}"
+          default-project-id: "${{ inputs.scaleway_project_id }}"
+          default-organization-id: "${{ inputs.scaleway_organization_id }}"
+          args: "rdb instance list region=${{ inputs.scaleway_region }} name=qa-shared"
+      - name: "[Scaleway] Check whether shared database instance exists"
+        id: "database_instance_exists"
+        if: "${{ inputs.deploy_database }}"
+        env:
+          DATABASE_INSTANCES: "${{ steps.database_instances.outputs.json }}"
+        run: |
+          COUNT=$(jq '[.[] | select(.name == "qa-shared")] | length' <<< "$DATABASE_INSTANCES")
+          if [[ "$COUNT" -gt 1 ]]; then
+            echo "Expected at most one managed database instance named qa-shared" >&2
+            exit 1
+          fi
+          echo "exists=$([[ "$COUNT" -eq 1 ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+      - name: "[Scaleway] Create shared database instance"
+        uses: "scaleway/action-scw@v0.0.3"
+        if: "${{ inputs.deploy_database && steps.database_instance_exists.outputs.exists == 'false' }}"
         with:
           access-key: "${{ secrets.scaleway_access_key }}"
           secret-key: "${{ secrets.scaleway_secret_key }}"
@@ -147,17 +168,81 @@ jobs:
           default-organization-id: "${{ inputs.scaleway_organization_id }}"
           args: >
             rdb instance create --wait region=${{ inputs.scaleway_region }}
-              name=qa-${{ github.event.number }}
+              name=qa-shared
               engine=PostgreSQL-17
               user-name=qa
               password=QA-prtest01!
               node-type="DB-DEV-S"
-              init-endpoints.0.private-network.private-network-id=${{ fromJson(steps.vpc.outputs.json).id }}
-              init-endpoints.0.private-network.enable-ipam=true
               disable-backup=true
-              tags.0=ephemeral=true
-              tags.1=pr-id=${{ github.event.number }}
-      - name: "[Scaleway] Create ACL rule to allow connections"
+              init-endpoints.0.load-balancer=true
+      - name: "[Scaleway] Find shared database instance after provisioning"
+        uses: "scaleway/action-scw@v0.0.3"
+        id: "provisioned_database_instances"
+        if: "${{ inputs.deploy_database }}"
+        with:
+          access-key: "${{ secrets.scaleway_access_key }}"
+          secret-key: "${{ secrets.scaleway_secret_key }}"
+          default-project-id: "${{ inputs.scaleway_project_id }}"
+          default-organization-id: "${{ inputs.scaleway_organization_id }}"
+          args: "rdb instance list region=${{ inputs.scaleway_region }} name=qa-shared"
+      - name: "[Scaleway] Resolve shared database instance"
+        id: "database_instance_id"
+        if: "${{ inputs.deploy_database }}"
+        env:
+          DATABASE_INSTANCES: "${{ steps.provisioned_database_instances.outputs.json }}"
+        run: |
+          INSTANCE_ID=$(jq -er '[.[] | select(.name == "qa-shared")] | if length == 1 then .[0].id else error("Expected exactly one managed database instance named qa-shared") end' <<< "$DATABASE_INSTANCES")
+          echo "id=$INSTANCE_ID" >> "$GITHUB_OUTPUT"
+      - name: "[Scaleway] Get shared database endpoints"
+        uses: "scaleway/action-scw@v0.0.3"
+        id: "database_endpoints"
+        if: "${{ inputs.deploy_database }}"
+        with:
+          access-key: "${{ secrets.scaleway_access_key }}"
+          secret-key: "${{ secrets.scaleway_secret_key }}"
+          default-project-id: "${{ inputs.scaleway_project_id }}"
+          default-organization-id: "${{ inputs.scaleway_organization_id }}"
+          args: "rdb endpoint list region=${{ inputs.scaleway_region }} ${{ steps.database_instance_id.outputs.id }}"
+      - name: "[Scaleway] Check whether public database endpoint exists"
+        id: "database_endpoint_exists"
+        if: "${{ inputs.deploy_database }}"
+        env:
+          DATABASE_ENDPOINTS: "${{ steps.database_endpoints.outputs.json }}"
+        run: |
+          if jq -e '[.[] | select(.load_balancer != null)] | length > 0' <<< "$DATABASE_ENDPOINTS" >/dev/null; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: "[Scaleway] Create public database endpoint"
+        uses: "scaleway/action-scw@v0.0.3"
+        if: "${{ inputs.deploy_database && steps.database_endpoint_exists.outputs.exists == 'false' }}"
+        with:
+          access-key: "${{ secrets.scaleway_access_key }}"
+          secret-key: "${{ secrets.scaleway_secret_key }}"
+          default-project-id: "${{ inputs.scaleway_project_id }}"
+          default-organization-id: "${{ inputs.scaleway_organization_id }}"
+          args: "rdb endpoint create ${{ steps.database_instance_id.outputs.id }} region=${{ inputs.scaleway_region }} load-balancer=true"
+      - name: "[Scaleway] Get database endpoints after provisioning"
+        uses: "scaleway/action-scw@v0.0.3"
+        id: "provisioned_database_endpoints"
+        if: "${{ inputs.deploy_database }}"
+        with:
+          access-key: "${{ secrets.scaleway_access_key }}"
+          secret-key: "${{ secrets.scaleway_secret_key }}"
+          default-project-id: "${{ inputs.scaleway_project_id }}"
+          default-organization-id: "${{ inputs.scaleway_organization_id }}"
+          args: "rdb endpoint list region=${{ inputs.scaleway_region }} ${{ steps.database_instance_id.outputs.id }}"
+      - name: "[Scaleway] Resolve public database endpoint"
+        id: "database_endpoint"
+        if: "${{ inputs.deploy_database }}"
+        env:
+          DATABASE_ENDPOINTS: "${{ steps.provisioned_database_endpoints.outputs.json }}"
+        run: |
+          ENDPOINT=$(jq -cer '[.[] | select(.load_balancer != null)][0] // error("The shared QA database instance must have a public endpoint")' <<< "$DATABASE_ENDPOINTS")
+          echo "host=$(jq -r '.ip' <<< "$ENDPOINT")" >> "$GITHUB_OUTPUT"
+          echo "port=$(jq -r '.port' <<< "$ENDPOINT")" >> "$GITHUB_OUTPUT"
+      - name: "[Scaleway] Allow QA database connections"
         uses: "scaleway/action-scw@v0.0.3"
         if: "${{ inputs.deploy_database }}"
         with:
@@ -165,17 +250,47 @@ jobs:
           secret-key: "${{ secrets.scaleway_secret_key }}"
           default-project-id: "${{ inputs.scaleway_project_id }}"
           default-organization-id: "${{ inputs.scaleway_organization_id }}"
-          args: "rdb acl add region=${{ inputs.scaleway_region }} instance-id=${{ fromJson(steps.database_instance.outputs.json).id }} 0.0.0.0/0"
-      - name: "[Scaleway] Get default database"
+          args: "rdb acl set region=${{ inputs.scaleway_region }} instance-id=${{ steps.database_instance_id.outputs.id }} 0.0.0.0/0"
+      - name: "[Scaleway] List databases on shared instance"
         uses: "scaleway/action-scw@v0.0.3"
-        id: "database"
+        id: "databases"
         if: "${{ inputs.deploy_database }}"
         with:
           access-key: "${{ secrets.scaleway_access_key }}"
           secret-key: "${{ secrets.scaleway_secret_key }}"
           default-project-id: "${{ inputs.scaleway_project_id }}"
           default-organization-id: "${{ inputs.scaleway_organization_id }}"
-          args: "rdb database list region=${{ inputs.scaleway_region }} instance-id=${{ fromJson(steps.database_instance.outputs.json).id }}"
+          args: "rdb database list region=${{ inputs.scaleway_region }} instance-id=${{ steps.database_instance_id.outputs.id }}"
+      - name: "[Scaleway] Check whether PR database exists"
+        id: "pr_database"
+        if: "${{ inputs.deploy_database }}"
+        env:
+          DATABASES: "${{ steps.databases.outputs.json }}"
+          DATABASE_NAME: "qa-${{ github.event.number }}"
+        run: |
+          if jq -e --arg name "$DATABASE_NAME" '[.[] | select(.name == $name)] | length > 0' <<< "$DATABASES" >/dev/null; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: "[Scaleway] Create PR database"
+        uses: "scaleway/action-scw@v0.0.3"
+        if: "${{ inputs.deploy_database && steps.pr_database.outputs.exists != 'true' }}"
+        with:
+          access-key: "${{ secrets.scaleway_access_key }}"
+          secret-key: "${{ secrets.scaleway_secret_key }}"
+          default-project-id: "${{ inputs.scaleway_project_id }}"
+          default-organization-id: "${{ inputs.scaleway_organization_id }}"
+          args: "rdb database create region=${{ inputs.scaleway_region }} instance-id=${{ steps.database_instance_id.outputs.id }} name=qa-${{ github.event.number }}"
+      - name: "[Scaleway] Grant QA user access to PR database"
+        uses: "scaleway/action-scw@v0.0.3"
+        if: "${{ inputs.deploy_database }}"
+        with:
+          access-key: "${{ secrets.scaleway_access_key }}"
+          secret-key: "${{ secrets.scaleway_secret_key }}"
+          default-project-id: "${{ inputs.scaleway_project_id }}"
+          default-organization-id: "${{ inputs.scaleway_organization_id }}"
+          args: "rdb privilege set region=${{ inputs.scaleway_region }} instance-id=${{ steps.database_instance_id.outputs.id }} database-name=qa-${{ github.event.number }} user-name=qa permission=all"
     
       # Container
       - name: "[Scaleway] Deploy container"
@@ -197,9 +312,9 @@ jobs:
               https-connections-only=true
               tags.0=ephemeral=true
               tags.1=pr-id=${{ github.event.number }}
-              ${{ inputs.deploy_database && format('environment-variables.DATABASE_HOST={0}', fromJson(steps.database_instance.outputs.json).endpoints[0].ip) || '' }}
-              ${{ inputs.deploy_database && format('environment-variables.DATABASE_PORT={0}', fromJson(steps.database_instance.outputs.json).endpoints[0].port) || '' }}
-              ${{ inputs.deploy_database && format('environment-variables.DATABASE_NAME={0}', fromJson(steps.database.outputs.json)[0].name) || '' }}
+              ${{ inputs.deploy_database && format('environment-variables.DATABASE_HOST={0}', steps.database_endpoint.outputs.host) || '' }}
+              ${{ inputs.deploy_database && format('environment-variables.DATABASE_PORT={0}', steps.database_endpoint.outputs.port) || '' }}
+              ${{ inputs.deploy_database && format('environment-variables.DATABASE_NAME=qa-{0}', github.event.number) || '' }}
               ${{ inputs.deploy_database && 'environment-variables.DATABASE_USER=qa' || '' }}
               ${{ inputs.deploy_database && 'secret-environment-variables.DATABASE_PASSWORD=QA-prtest01!' || '' }}
               ${{ inputs.container_deployment_extra_arguments }}
