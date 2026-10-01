@@ -75,6 +75,9 @@ on:
       scaleway_secret_key:
         description: "The Scaleway secret key to authenticate with"
         required: true
+      scaleway_database_password:
+        description: "Password for the shared QA database user. Required when deploy_database is true"
+        required: false
     
     outputs:
       url:
@@ -118,22 +121,17 @@ jobs:
     needs: "build"
     runs-on: "ubuntu-latest"
     outputs:
-      url: "${{ fromJson(steps.container.outputs.json).public_endpoint }}"
+      url: "${{ steps.container_url.outputs.url }}"
     steps:
-      # VPC
-      - name: "[Scaleway] Create VPC"
-        uses: "scaleway/action-scw@v0.0.3"
-        id: "vpc"
-        with:
-          access-key: "${{ secrets.scaleway_access_key }}"
-          secret-key: "${{ secrets.scaleway_secret_key }}"
-          default-project-id: "${{ inputs.scaleway_project_id }}"
-          default-organization-id: "${{ inputs.scaleway_organization_id }}"
-          args: >
-            vpc private-network create region=${{ inputs.scaleway_region }}
-              name=qa-${{ github.event.number }}
-              tags.0=ephemeral=true
-              tags.1=pr-id=${{ github.event.number }}
+      - name: "Verify the database password is available"
+        if: "${{ inputs.deploy_database }}"
+        env:
+          SCALEWAY_DATABASE_PASSWORD: "${{ secrets.scaleway_database_password }}"
+        run: |
+          if [[ -z "$SCALEWAY_DATABASE_PASSWORD" ]]; then
+            echo "deploy_database is enabled, so the scaleway_database_password secret must be provided" >&2
+            exit 1
+          fi
 
       # Provision one shared instance on first use; subsequent PRs reuse it.
       - name: "[Scaleway] Find shared database instance"
@@ -171,7 +169,7 @@ jobs:
               name=qa-shared
               engine=PostgreSQL-17
               user-name=qa
-              password=QA-prtest01!
+              password=${{ secrets.scaleway_database_password }}
               node-type="DB-DEV-S"
               disable-backup=true
               init-endpoints.0.load-balancer=true
@@ -308,7 +306,6 @@ jobs:
               min-scale=0 max-scale=1 memory-limit-bytes=0.128G mvcpu-limit=100
               image=${{ inputs.container_registry }}/qa-test:qa-${{ github.run_id }}
               port=${{ inputs.container_port }}
-              private-network-id=${{ fromJson(steps.vpc.outputs.json).id }}
               https-connections-only=true
               tags.0=ephemeral=true
               tags.1=pr-id=${{ github.event.number }}
@@ -316,5 +313,15 @@ jobs:
               ${{ inputs.deploy_database && format('environment-variables.DATABASE_PORT={0}', steps.database_endpoint.outputs.port) || '' }}
               ${{ inputs.deploy_database && format('environment-variables.DATABASE_NAME=qa-{0}', github.event.number) || '' }}
               ${{ inputs.deploy_database && 'environment-variables.DATABASE_USER=qa' || '' }}
-              ${{ inputs.deploy_database && 'secret-environment-variables.DATABASE_PASSWORD=QA-prtest01!' || '' }}
+              ${{ inputs.deploy_database && format('secret-environment-variables.DATABASE_PASSWORD={0}', secrets.scaleway_database_password) || '' }}
               ${{ inputs.container_deployment_extra_arguments }}
+      - name: "Resolve the container URL"
+        id: "container_url"
+        env:
+          CONTAINER: "${{ steps.container.outputs.json }}"
+        run: |
+          CONTAINER_JSON="$CONTAINER"
+          if [[ -z "$CONTAINER_JSON" ]]; then
+            CONTAINER_JSON="{}"
+          fi
+          echo "url=$(jq -r '.public_endpoint // empty' <<< "$CONTAINER_JSON")" >> "$GITHUB_OUTPUT"
