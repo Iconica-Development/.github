@@ -80,6 +80,9 @@ on:
         required: false
     
     outputs:
+      id:
+        description: "The ID of the deployed container"
+        value: "${{ jobs.deploy.outputs.id }}"
       url:
         description: "The URL of the deployed container"
         value: "${{ jobs.deploy.outputs.url }}"
@@ -121,7 +124,8 @@ jobs:
     needs: "build"
     runs-on: "ubuntu-latest"
     outputs:
-      url: "${{ steps.container_url.outputs.url }}"
+      id: "${{ steps.container_info.outputs.id }}"
+      url: "${{ steps.container_info.outputs.url }}"
     steps:
       - name: "Verify the database password is available"
         if: "${{ inputs.deploy_database }}"
@@ -364,8 +368,8 @@ jobs:
               ${{ inputs.deploy_database && format('environment-variables.DATABASE_USER=qa-{0}', github.event.number) || '' }}
               ${{ inputs.deploy_database && format('secret-environment-variables.DATABASE_PASSWORD={0}', steps.pr_database_password.outputs.password) || '' }}
               ${{ inputs.container_deployment_extra_arguments }}
-      - name: "Resolve the container URL"
-        id: "container_url"
+      - name: "Resolve container info"
+        id: "container_info"
         env:
           CONTAINER: "${{ steps.container.outputs.json }}"
         run: |
@@ -373,4 +377,5 @@ jobs:
           if [[ -z "$CONTAINER_JSON" ]]; then
             CONTAINER_JSON="{}"
           fi
+          echo "id=$(jq -r '.id // empty' <<< "$CONTAINER_JSON")" >> "$GITHUB_OUTPUT"
           echo "url=$(jq -r '.public_endpoint // empty' <<< "$CONTAINER_JSON")" >> "$GITHUB_OUTPUT"
