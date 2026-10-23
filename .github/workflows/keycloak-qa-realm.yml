@@ -1,0 +1,324 @@
+name: "Manage a Keycloak realm for QA"
+
+# Creates, updates or deletes a short-lived Keycloak realm (e.g. one per PR) based on a realm
+# template from the calling repository, together with an admin account that only has access to
+# that realm.
+#
+# Operations:
+#   create          (Re)creates the realm from the template. Any existing realm with the same name
+#                   is deleted first, so every run starts from a clean realm.
+#   update-clients  Re-applies the URL settings of every template client that uses a placeholder,
+#                   e.g. once the URL of a deployed app is known.
+#   delete          Deletes the realm. Deleting a realm that doesn't exist succeeds.
+#
+# Placeholders: strings in the template may contain ${NAME} or ${NAME:default}, where NAME is in
+# upper case (the same syntax Keycloak supports when importing realms). They are replaced by the
+# values from the placeholders inputs. Strings that use a placeholder without a value or default are
+# left out, so for example redirect URIs of an app that hasn't been deployed yet can be added later
+# with update-clients. Parts of the template that only work with values you don't want to provide
+# for QA (e.g. SMTP settings) can be left out entirely with the exclude input. Users in the template
+# are never imported.
+#
+# Keycloak setup: create a confidential client in the master realm with only "Service accounts
+# roles" enabled and assign it the master realm role "create-realm". Keycloak grants the creator of
+# a realm admin rights on that realm only, so the client can manage and delete the realms it
+# created but can't access any other realm.
+
+on:
+  workflow_call:
+    inputs:
+      operation:
+        type: "string"
+        description: "The operation to perform: create, update-clients or delete"
+        required: true
+      keycloak_url:
+        type: "string"
+        description: "The base URL of the Keycloak server, e.g. https://auth.example.com"
+        required: true
+      keycloak_client_id:
+        type: "string"
+        description: "The master realm client whose service account has only the create-realm role"
+        required: true
+      realm:
+        type: "string"
+        description: "The name of the realm to manage, e.g. my-app-qa-pr-42"
+        required: true
+      realm_template:
+        type: "string"
+        description: "Path to the realm JSON template in the calling repository. Required for create and update-clients"
+        required: false
+        default: ""
+      placeholders:
+        type: "string"
+        description: "Values for the template placeholders, one NAME=value per line"
+        required: false
+        default: ""
+      exclude:
+        type: "string"
+        description: "Template paths to leave out, one per line, with keys separated by dots, e.g. smtpServer"
+        required: false
+        default: ""
+      admin_username:
+        type: "string"
+        description: "Username (and email address) of the realm admin account. Required for create"
+        required: false
+        default: ""
+    secrets:
+      keycloak_client_secret:
+        description: "The secret of the master realm client"
+        required: true
+      admin_password:
+        description: "The password of the realm admin account. Required for create"
+        required: false
+      secret_placeholders:
+        description: "Values for template placeholders that must stay secret, one NAME=value per line"
+        required: false
+    outputs:
+      issuer:
+        description: "The OpenID Connect issuer URL of the realm"
+        value: "${{ jobs.realm.outputs.issuer }}"
+      admin_console_url:
+        description: "The URL of the admin console of the realm"
+        value: "${{ jobs.realm.outputs.admin_console_url }}"
+
+jobs:
+  realm:
+    name: "${{ inputs.operation }} Keycloak realm ${{ inputs.realm }}"
+    runs-on: "ubuntu-latest"
+    # Operations on the same realm must not interleave, e.g. a cleanup during a (re)creation.
+    concurrency:
+      group: "keycloak-qa-realm-${{ inputs.keycloak_url }}-${{ inputs.realm }}"
+      cancel-in-progress: false
+    outputs:
+      issuer: "${{ steps.realm.outputs.issuer }}"
+      admin_console_url: "${{ steps.realm.outputs.admin_console_url }}"
+    steps:
+      - name: "Clone the code"
+        if: "inputs.operation != 'delete'"
+        uses: "actions/checkout@v5"
+
+      - name: "${{ inputs.operation }} the realm"
+        id: "realm"
+        shell: "bash"
+        env:
+          OPERATION: "${{ inputs.operation }}"
+          KEYCLOAK_URL: "${{ inputs.keycloak_url }}"
+          KEYCLOAK_CLIENT_ID: "${{ inputs.keycloak_client_id }}"
+          KEYCLOAK_CLIENT_SECRET: "${{ secrets.keycloak_client_secret }}"
+          REALM: "${{ inputs.realm }}"
+          REALM_TEMPLATE: "${{ inputs.realm_template }}"
+          PLACEHOLDERS: "${{ inputs.placeholders }}"
+          EXCLUDE: "${{ inputs.exclude }}"
+          SECRET_PLACEHOLDERS: "${{ secrets.secret_placeholders }}"
+          ADMIN_USERNAME: "${{ inputs.admin_username }}"
+          ADMIN_PASSWORD: "${{ secrets.admin_password }}"
+        run: |
+          set -euo pipefail
+          shopt -s inherit_errexit 2> /dev/null || true
+
+          fail() {
+            echo "::error::$1"
+            exit 1
+          }
+
+          [[ -n "$KEYCLOAK_URL" ]] || fail "keycloak_url must be set."
+          [[ -n "$KEYCLOAK_CLIENT_ID" ]] || fail "keycloak_client_id must be set."
+          [[ -n "$KEYCLOAK_CLIENT_SECRET" ]] || fail "The keycloak_client_secret secret must be set."
+          KEYCLOAK_URL="${KEYCLOAK_URL%/}"
+          if [[ ! "$REALM" =~ ^[a-z0-9][a-z0-9_-]*$ || "$REALM" == "master" ]]; then
+            fail "'$REALM' is not a valid realm name. Use lower case letters, digits, '-' and '_'."
+          fi
+
+          # Values of secret placeholders must never show up in the logs.
+          while IFS= read -r line; do
+            line="${line%$'\r'}"
+            if [[ "$line" == *=* && -n "${line#*=}" ]]; then
+              echo "::add-mask::${line#*=}"
+            fi
+          done <<< "$SECRET_PLACEHOLDERS"
+
+          status=""
+          body=""
+          # Keeps the bearer token out of process arguments.
+          auth_header_file="$(mktemp)"
+          trap 'rm -f "$auth_header_file"' EXIT
+
+          # Secrets pasted with surrounding whitespace or a trailing newline would otherwise be rejected.
+          KEYCLOAK_CLIENT_SECRET="$(sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' <<< "$KEYCLOAK_CLIENT_SECRET")"
+
+          refresh_token() {
+            local response token_status access_token
+            response="$(
+              printf '%s' "$KEYCLOAK_CLIENT_SECRET" | curl -sS -w '\n%{http_code}' \
+                -X POST "$KEYCLOAK_URL/realms/master/protocol/openid-connect/token" \
+                --data-urlencode "grant_type=client_credentials" \
+                --data-urlencode "client_id=$KEYCLOAK_CLIENT_ID" \
+                --data-urlencode "client_secret@-"
+            )"
+            token_status="${response##*$'\n'}"
+            response="${response%$'\n'*}"
+            if [[ "$token_status" != 200 ]] || ! access_token="$(jq -er ".access_token" <<< "$response" 2> /dev/null)"; then
+              fail "Failed to authenticate client $KEYCLOAK_CLIENT_ID in the master realm: HTTP $token_status $response. Check that the client exists in the master realm, has client authentication and service accounts enabled, and that keycloak_client_secret matches its current secret."
+            fi
+            echo "::add-mask::$access_token"
+            printf 'Authorization: Bearer %s' "$access_token" > "$auth_header_file"
+          }
+
+          # Calls the admin API below /admin/realms and stores the response in $status and $body.
+          # The optional JSON body is passed on stdin so credentials don't show up in process arguments.
+          request() {
+            local method="$1" path="$2" payload="${3-}" response
+            local args=(-sS -X "$method" -H "@$auth_header_file" -w '\n%{http_code}')
+            if [[ $# -ge 3 ]]; then
+              args+=(-H "Content-Type: application/json" --data-binary @-)
+            fi
+            response="$(printf '%s' "$payload" | curl "${args[@]}" "$KEYCLOAK_URL/admin/realms$path")"
+            status="${response##*$'\n'}"
+            body="${response%$'\n'*}"
+          }
+
+          expect_status() {
+            local description="$1" allowed
+            shift
+            for allowed in "$@"; do
+              [[ "$status" == "$allowed" ]] && return 0
+            done
+            fail "Failed to $description: HTTP $status $body"
+          }
+
+          write_output() {
+            echo "$1=$2" >> "${GITHUB_OUTPUT:-/dev/null}"
+            echo "$1=$2"
+          }
+
+          delete_realm() {
+            request DELETE "/$REALM"
+            expect_status "delete realm $REALM (it must have been created by the service account)" 204 404
+          }
+
+          # Prints the template with all placeholders resolved. Strings using a placeholder without
+          # a value or default are left out of their array or object.
+          resolve_template() {
+            [[ -n "$REALM_TEMPLATE" ]] || fail "realm_template must be set for $OPERATION."
+            [[ -f "$REALM_TEMPLATE" ]] || fail "The realm template $REALM_TEMPLATE doesn't exist."
+            local resolved unresolved
+            resolved="$(
+              jq '
+                def parse:
+                  split("\n")
+                  | map(sub("\r$"; ""))
+                  | map(select(test("^\\s*(#.*)?$") | not))
+                  | map(
+                      capture("^\\s*(?<key>[A-Z][A-Z0-9_]*)=(?<value>.*)$")
+                      // error("Invalid placeholder definition, expected NAME=value with NAME in upper case")
+                    )
+                  | from_entries;
+                def pattern: "\\$\\{(?<name>[A-Z][A-Z0-9_]*)(?::(?<default>[^}]*))?\\}";
+                def unresolved($values):
+                  [match(pattern; "g") | .captures | select($values[.[0].string] == null and .[1].string == null)]
+                  | length > 0;
+                reduce (
+                  env.EXCLUDE | split("\n")[] | gsub("^\\s+|\\s+$"; "") | select(length > 0) | split(".")
+                ) as $path (.; delpaths([$path]))
+                | {omitted: true} as $omitted
+                | ((env.PLACEHOLDERS | parse) + (env.SECRET_PLACEHOLDERS | parse)) as $values
+                | {
+                    unresolved: ([.. | strings | match(pattern; "g") | .captures
+                      | select($values[.[0].string] == null and .[1].string == null) | .[0].string] | unique),
+                    template: walk(
+                      if type == "string" then
+                        if unresolved($values) then $omitted
+                        else gsub(pattern; $values[.name] // .default)
+                        end
+                      elif type == "array" then map(select(. != $omitted))
+                      elif type == "object" then with_entries(select(.value != $omitted))
+                      else .
+                      end
+                    )
+                  }
+              ' "$REALM_TEMPLATE"
+            )"
+            unresolved="$(jq -r '.unresolved | join(", ")' <<< "$resolved")"
+            if [[ -n "$unresolved" ]]; then
+              echo "::notice::Template values using these placeholders are left out because they have no value: $unresolved" >&2
+            fi
+            jq '.template' <<< "$resolved"
+          }
+
+          # Clients of the template that use a placeholder, with their URL settings resolved.
+          template_clients() {
+            local template
+            template="$(resolve_template)"
+            jq --slurpfile original "$REALM_TEMPLATE" '
+              ($original[0].clients // [] | map(select([.. | strings | test("\\$\\{[A-Z]")] | any) | .clientId)) as $ids
+              | .clients // []
+              | map(select(.clientId as $id | $ids | index($id)))
+              | map({clientId} + ({rootUrl, baseUrl, adminUrl, redirectUris, webOrigins, attributes} | with_entries(select(.value != null))))
+            ' <<< "$template"
+          }
+
+          create() {
+            [[ -n "$ADMIN_USERNAME" ]] || fail "admin_username must be set for create."
+            [[ -n "$ADMIN_PASSWORD" ]] || fail "The admin_password secret must be set for create."
+
+            # The admin is part of the import because the service account may not grant the
+            # composite realm-admin role afterwards. Credentials come from the environment to keep
+            # them out of process arguments.
+            local realm
+            realm="$(
+              resolve_template | jq --arg realm "$REALM" '
+                del(.id)
+                | .displayName = "\(.displayName // .realm) (\($realm))"
+                | .realm = $realm
+                | .enabled = true
+                | .users = [{
+                    username: env.ADMIN_USERNAME,
+                    email: (if env.ADMIN_USERNAME | contains("@") then env.ADMIN_USERNAME else null end),
+                    emailVerified: true,
+                    enabled: true,
+                    firstName: "QA",
+                    lastName: "Admin",
+                    credentials: [{type: "password", value: env.ADMIN_PASSWORD, temporary: false}],
+                    clientRoles: {"realm-management": ["realm-admin"]}
+                  }]
+              '
+            )"
+
+            refresh_token
+            delete_realm
+            request POST "" "$realm"
+            expect_status "create realm $REALM" 201
+
+            write_output "issuer" "$KEYCLOAK_URL/realms/$REALM"
+            write_output "admin_console_url" "$KEYCLOAK_URL/admin/$REALM/console/"
+          }
+
+          update_clients() {
+            local clients client client_id existing
+            clients="$(template_clients)"
+            refresh_token
+            while IFS= read -r client; do
+              client_id="$(jq -r '.clientId' <<< "$client")"
+              request GET "/$REALM/clients?clientId=$(jq -rn --arg id "$client_id" '$id | @uri')"
+              expect_status "find client $client_id" 200
+              existing="$(jq -e --arg id "$client_id" '.[] | select(.clientId == $id)' <<< "$body")" \
+                || fail "Client $client_id doesn't exist in realm $REALM."
+              request PUT "/$REALM/clients/$(jq -r '.id' <<< "$existing")" \
+                "$(jq -n --argjson existing "$existing" --argjson client "$client" '$existing * $client')"
+              expect_status "update client $client_id" 204
+              echo "Updated client $client_id"
+            done < <(jq -c '.[]' <<< "$clients")
+
+            write_output "issuer" "$KEYCLOAK_URL/realms/$REALM"
+            write_output "admin_console_url" "$KEYCLOAK_URL/admin/$REALM/console/"
+          }
+
+          case "$OPERATION" in
+            create) create ;;
+            update-clients) update_clients ;;
+            delete)
+              refresh_token
+              delete_realm
+              ;;
+            *) fail "Unknown operation '$OPERATION', expected create, update-clients or delete." ;;
+          esac
