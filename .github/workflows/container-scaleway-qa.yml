@@ -78,6 +78,9 @@ on:
       scaleway_database_password:
         description: "Password for the admin user of the shared QA database instance, used when that instance is first provisioned. Required when deploy_database is true"
         required: false
+      container_deployment_secret_arguments:
+        description: "Additional deployment arguments containing secrets, such as secret-environment-variables.KEY=value"
+        required: false
     
     outputs:
       id:
@@ -368,6 +371,7 @@ jobs:
               ${{ inputs.deploy_database && format('environment-variables.DATABASE_USER=qa-{0}', github.event.number) || '' }}
               ${{ inputs.deploy_database && format('secret-environment-variables.DATABASE_PASSWORD={0}', steps.pr_database_password.outputs.password) || '' }}
               ${{ inputs.container_deployment_extra_arguments }}
+              ${{ secrets.container_deployment_secret_arguments }}
       - name: "Resolve container info"
         id: "container_info"
         env:
