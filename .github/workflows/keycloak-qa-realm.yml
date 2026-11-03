@@ -16,8 +16,8 @@ name: "Manage a Keycloak realm for QA"
 # values from the placeholders inputs. Strings that use a placeholder without a value or default are
 # left out, so for example redirect URIs of an app that hasn't been deployed yet can be added later
 # with update-clients. Parts of the template that only work with values you don't want to provide
-# for QA (e.g. SMTP settings) can be left out entirely with the exclude input. Users in the template
-# are never imported.
+# for QA (e.g. SMTP settings) can be left out entirely with the exclude input. Template human users
+# are never imported; service-account entries are retained.
 #
 # Keycloak setup: create a confidential client in the master realm with only "Service accounts
 # roles" enabled and assign it the master realm role "create-realm". Keycloak grants the creator of
@@ -61,6 +61,11 @@ on:
       admin_username:
         type: "string"
         description: "Username (and email address) of the realm admin account. Required for create"
+        required: false
+        default: ""
+      admin_realm_roles:
+        type: "string"
+        description: "Additional realm roles for the QA admin, one role name per line"
         required: false
         default: ""
     secrets:
@@ -111,6 +116,7 @@ jobs:
           EXCLUDE: "${{ inputs.exclude }}"
           SECRET_PLACEHOLDERS: "${{ secrets.secret_placeholders }}"
           ADMIN_USERNAME: "${{ inputs.admin_username }}"
+          ADMIN_REALM_ROLES: "${{ inputs.admin_realm_roles }}"
           ADMIN_PASSWORD: "${{ secrets.admin_password }}"
         run: |
           set -euo pipefail
@@ -271,7 +277,7 @@ jobs:
                 | .displayName = "\(.displayName // .realm) (\($realm))"
                 | .realm = $realm
                 | .enabled = true
-                | .users = [{
+                | .users = ([.users[]? | select(.serviceAccountClientId != null)] + [{
                     username: env.ADMIN_USERNAME,
                     email: (if env.ADMIN_USERNAME | contains("@") then env.ADMIN_USERNAME else null end),
                     emailVerified: true,
@@ -279,8 +285,9 @@ jobs:
                     firstName: "QA",
                     lastName: "Admin",
                     credentials: [{type: "password", value: env.ADMIN_PASSWORD, temporary: false}],
+                    realmRoles: (env.ADMIN_REALM_ROLES | split("\n") | map(gsub("^\\s+|\\s+$"; "") | select(length > 0))),
                     clientRoles: {"realm-management": ["realm-admin"]}
-                  }]
+                  }])
               '
             )"
 
