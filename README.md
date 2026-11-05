@@ -17,4 +17,3 @@ If you would like to contribute to a package (e.g. by improving the documentatio
 ## Author
 
 This <PACKAGE NAME> for Flutter is developed by [Iconica](https://iconica.nl). You can contact us at <support@iconica.nl>
-

@@ -50,6 +50,11 @@ on:
         description: "Version of the final container image (default=latest)"
         required: false
         default: "latest"
+      container_tags:
+        type: "string"
+        description: "Newline-separated image tag suffixes; when empty, uses container_version"
+        required: false
+        default: ""
       pre_build_commands:
         type: "string"
         description: "Any commands to be executed before building"
@@ -85,6 +90,14 @@ jobs:
         run: "${{ inputs.pre_build_commands }}"
 
       # Build
+      - name: "Prepare container tags"
+        id: "container-tags"
+        uses: "docker/metadata-action@v6"
+        with:
+          images: "${{ inputs.container_registry }}/${{ inputs.container_name }}"
+          tags: "${{ inputs.container_tags || inputs.container_version }}"
+          flavor: "latest=false"
+
       - name: "Build and push the container image"
         uses: "docker/build-push-action@v7"
         with:
@@ -92,7 +105,7 @@ jobs:
           push: true
           file: "${{ inputs.container_file }}"
           build-args: ${{ inputs.container_build_args }}
-          tags: "${{ inputs.container_registry }}/${{ inputs.container_name }}:${{ inputs.container_version }}"
+          tags: "${{ steps.container-tags.outputs.tags }}"
           cache-from: "type=gha"
           cache-to: "type=gha,mode=max"
 
