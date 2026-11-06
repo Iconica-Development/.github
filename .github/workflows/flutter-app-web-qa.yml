@@ -46,6 +46,11 @@ on:
         description: "The port the deployed container should publish (default=80)"
         required: false
         default: "80"
+      container_deployment_extra_arguments:
+        type: "string"
+        description: "Extra arguments to pass when deploying the container. Can be used for setting public environment variables (default=none). Do not pass secrets here."
+        required: false
+        default: ""
       container_name:
         type: "string"
         description: "The name of the container on Scaleway. Note that the CI run ID will be appended to this (default=qa-web)"
@@ -135,3 +140,4 @@ jobs:
               tags.1=cleanup-after=${{ steps.tags.outputs.CLEANUP_AFTER }}
               tags.2=ephemeral=true
               tags.3=pr-id=${{ github.event.number }}
+              ${{ inputs.container_deployment_extra_arguments }}
